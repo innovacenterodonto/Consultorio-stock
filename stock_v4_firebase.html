@@ -1,0 +1,1596 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Stock — Consultorio Odontológico</title>
+<style>
+:root{
+  --azul:#1A3557;--azul-m:#2563A8;--azul-cl:#D6E4F7;
+  --verde:#1A7A4A;--verde-cl:#D4EDDA;
+  --amarillo:#856404;--amarillo-cl:#FFF3CD;
+  --rojo:#842029;--rojo-cl:#F8D7DA;
+  --violeta:#4C3494;--violeta-cl:#EDE9FC;
+  --naranja:#92400e;--naranja-cl:#FEF3C7;
+  --borde:#ddd;--text:#1a1a1a;--text-s:#555;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Arial,sans-serif;background:#eef2f7;color:var(--text);font-size:14px}
+
+/* LOGIN */
+.login-screen{position:fixed;inset:0;background:var(--azul);display:flex;align-items:center;justify-content:center;z-index:1000;flex-direction:column;gap:24px}
+.login-screen.hidden{display:none}
+.login-box{background:white;border-radius:16px;padding:32px;width:340px;max-width:95vw;box-shadow:0 8px 40px rgba(0,0,0,.3)}
+.login-box h2{font-size:18px;color:var(--azul);margin-bottom:6px;text-align:center}
+.login-box p{font-size:13px;color:var(--text-s);text-align:center;margin-bottom:20px}
+.user-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px}
+.user-btn{padding:12px 8px;border:2px solid var(--borde);border-radius:10px;background:white;cursor:pointer;font-size:13px;font-weight:700;text-align:center;transition:all .15s;display:flex;flex-direction:column;align-items:center;gap:6px}
+.user-btn:hover{border-color:var(--azul-m);background:var(--azul-cl)}
+.user-btn.selected{border-color:var(--azul);background:var(--azul-cl)}
+.user-btn .avatar{width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;color:white}
+.pin-wrap{display:flex;flex-direction:column;gap:8px;margin-bottom:16px}
+.pin-wrap input{padding:10px;border:1px solid var(--borde);border-radius:8px;font-size:18px;letter-spacing:6px;text-align:center;font-family:monospace}
+.login-err{color:var(--rojo);font-size:12px;text-align:center;min-height:16px}
+
+/* HEADER */
+header{background:var(--azul);color:white;padding:12px 20px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px}
+header h1{font-size:16px;font-weight:700}
+.user-badge{display:flex;align-items:center;gap:8px;background:rgba(255,255,255,.15);border-radius:20px;padding:5px 12px;font-size:12px}
+.user-dot{width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:white}
+
+/* TABS */
+.tabs{background:white;border-bottom:2px solid var(--borde);display:flex;padding:0 14px;overflow-x:auto;gap:0}
+.tab{padding:10px 14px;font-size:13px;font-weight:700;color:var(--text-s);cursor:pointer;border-bottom:3px solid transparent;margin-bottom:-2px;white-space:nowrap;transition:color .15s}
+.tab:hover{color:var(--azul-m)}
+.tab.active{color:var(--azul);border-bottom-color:var(--azul)}
+.tab.admin-only{display:none}
+.tab.admin-only.show{display:block}
+
+/* TOOLBAR */
+.toolbar{background:white;border-bottom:1px solid var(--borde);padding:8px 20px;display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+button{padding:7px 13px;border:1px solid var(--borde);border-radius:6px;background:white;cursor:pointer;font-size:13px;font-family:Arial;display:inline-flex;align-items:center;gap:5px;transition:background .15s}
+button:hover{background:#f0f4f8}
+button.primary{background:var(--azul);color:white;border-color:var(--azul)}
+button.primary:hover{background:var(--azul-m)}
+button.accent{background:var(--violeta);color:white;border-color:var(--violeta)}
+button.accent:hover{background:#3a2675}
+button.sm{padding:3px 8px;font-size:12px;border-radius:5px}
+button.danger-btn{color:var(--rojo);border-color:var(--rojo-cl)}
+
+/* STATS */
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;padding:12px 20px}
+.stat{background:white;border-radius:10px;padding:11px 14px;border:1px solid var(--borde)}
+.stat .num{font-size:24px;font-weight:700}
+.stat .lbl{font-size:11px;color:var(--text-s);margin-top:2px}
+.stat.ok .num{color:var(--verde)}
+.stat.warn .num{color:var(--amarillo)}
+.stat.danger .num{color:var(--rojo)}
+
+.alert-bar{margin:0 20px 8px;padding:10px 14px;border-radius:8px;background:var(--rojo-cl);border:1px solid #f5c2c7;color:var(--rojo);font-size:12px;display:none;line-height:1.6}
+.section{margin:0 20px 20px}
+.section h2{font-size:11px;font-weight:700;color:var(--text-s);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px}
+.table-wrap{background:white;border-radius:10px;border:1px solid var(--borde);overflow:auto}
+table{width:100%;border-collapse:collapse;min-width:500px}
+thead th{background:var(--azul-m);color:white;padding:8px 12px;text-align:left;font-size:12px;font-weight:700;white-space:nowrap}
+tbody tr{border-bottom:1px solid #f0f0f0;transition:background .1s}
+tbody tr:last-child{border-bottom:none}
+tbody tr:hover{background:#f8fbff}
+tbody td{padding:7px 12px;font-size:13px;vertical-align:middle}
+
+.badge{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:700}
+.badge.ok{background:var(--verde-cl);color:var(--verde)}
+.badge.warn{background:var(--amarillo-cl);color:var(--amarillo)}
+.badge.danger{background:var(--rojo-cl);color:var(--rojo)}
+.badge.cfg{background:#e8f4fd;color:#0c4a7c}
+.bar-wrap{width:75px;height:5px;background:#e5e5e5;border-radius:3px;display:inline-block;vertical-align:middle;overflow:hidden}
+.bar{height:100%;border-radius:3px}
+.bar.ok{background:var(--verde)}
+.bar.warn{background:#e6a817}
+.bar.danger{background:var(--rojo)}
+.venc-ok{font-size:11px;color:var(--verde)}
+.venc-pronto{font-size:11px;color:var(--amarillo);font-weight:700}
+.venc-vencido{font-size:11px;color:var(--rojo);font-weight:700}
+.venc-nd{font-size:11px;color:#bbb}
+
+/* HISTORIAL */
+.hist-list{padding:4px 0;max-height:280px;overflow-y:auto}
+.hist-item{display:flex;justify-content:space-between;align-items:flex-start;padding:7px 14px;border-bottom:1px solid #f0f0f0;font-size:12px;gap:8px}
+.hist-item:last-child{border-bottom:none}
+.tag{padding:2px 8px;border-radius:10px;font-size:11px;font-weight:700;white-space:nowrap}
+.tag.in{background:var(--verde-cl);color:var(--verde)}
+.tag.out{background:var(--rojo-cl);color:var(--rojo)}
+.tag.proc{background:var(--violeta-cl);color:var(--violeta)}
+
+/* PRESTACIONES */
+.prest-row{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center;padding:8px 12px;background:white;border:1px solid var(--borde);border-radius:8px;margin-bottom:4px}
+.prest-row:hover{border-color:var(--azul-cl)}
+.prest-name{font-size:13px;font-weight:500}
+.prest-dur{font-size:11px;color:var(--text-s);margin-top:1px}
+.prest-actions{display:flex;gap:5px;align-items:center}
+.cat-title{font-size:12px;font-weight:700;color:var(--azul);text-transform:uppercase;letter-spacing:.04em;padding:8px 12px;background:var(--azul-cl);border-radius:7px;margin-bottom:5px;margin-top:12px}
+
+/* ADMIN */
+.admin-card{background:white;border-radius:12px;border:1px solid var(--borde);overflow:hidden;margin-bottom:16px}
+.admin-card-head{padding:13px 18px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px}
+.admin-card-body{padding:14px 18px;font-size:13px;color:var(--text-s);border-bottom:1px solid #f0f0f0}
+.admin-list{max-height:300px;overflow-y:auto}
+.admin-item{display:flex;align-items:center;justify-content:space-between;padding:9px 18px;border-bottom:1px solid #f4f4f4;gap:8px}
+.admin-item:last-child{border-bottom:none}
+.admin-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px;padding:16px 20px}
+
+/* USUARIOS */
+.user-admin-row{display:flex;align-items:center;justify-content:space-between;padding:10px 18px;border-bottom:1px solid #f4f4f4;gap:8px}
+.user-admin-row:last-child{border-bottom:none}
+
+/* MODAL */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);display:none;align-items:center;justify-content:center;z-index:200}
+.overlay.open{display:flex}
+.modal{background:white;border-radius:12px;padding:22px;width:440px;max-width:96vw;box-shadow:0 8px 32px rgba(0,0,0,.2);max-height:90vh;overflow-y:auto}
+.modal h3{font-size:15px;font-weight:700;margin-bottom:14px;color:var(--azul)}
+.field{display:flex;flex-direction:column;gap:4px;margin-bottom:12px}
+.field label{font-size:12px;color:var(--text-s);font-weight:700}
+.field input,.field select,.field textarea{padding:8px 10px;border:1px solid var(--borde);border-radius:6px;font-size:13px;font-family:Arial}
+.modal-btns{display:flex;gap:8px;justify-content:flex-end;margin-top:16px}
+.insumo-line{display:grid;grid-template-columns:1fr 80px 28px;gap:6px;align-items:center;margin-bottom:6px}
+.insumo-line select,.insumo-line input{padding:6px 8px;border:1px solid var(--borde);border-radius:6px;font-size:12px;font-family:Arial}
+.rm-btn{background:var(--rojo-cl);color:var(--rojo);border:none;border-radius:5px;cursor:pointer;width:26px;height:26px;display:flex;align-items:center;justify-content:center;font-size:15px}
+.confirm-box{background:#f8f9fa;border-radius:8px;padding:12px;margin:10px 0}
+.confirm-row{display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid #eee;font-size:13px}
+.confirm-row:last-child{border-bottom:none}
+.warn-txt{color:var(--rojo);font-weight:700}
+.page{display:none}
+.page.active{display:block}
+.search-box{padding:6px 10px;border:1px solid var(--borde);border-radius:6px;font-size:13px;font-family:Arial;min-width:180px}
+.empty-row{text-align:center;padding:24px;color:var(--text-s);font-size:13px}
+
+/* PIN dots */
+.pin-dots{display:flex;gap:8px;justify-content:center;margin:8px 0}
+.pin-dot{width:12px;height:12px;border-radius:50%;background:#ddd;transition:background .15s}
+.pin-dot.filled{background:var(--azul)}
+.numpad{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px}
+.numpad-btn{padding:14px;border:1px solid var(--borde);border-radius:8px;font-size:18px;font-weight:700;cursor:pointer;background:white;transition:background .15s;text-align:center}
+.numpad-btn:hover{background:var(--azul-cl)}
+.numpad-btn.del{color:var(--rojo)}
+</style>
+
+  <!-- ══ FIREBASE SDK ══ -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { getFirestore, doc, getDoc, setDoc, onSnapshot, collection, addDoc, query, orderBy, limit } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+    // ▼▼▼ PEGÁ ACÁ TU firebaseConfig ▼▼▼
+    const firebaseConfig = {
+      apiKey: "AIzaSyDe6TWoKPOjVc5-boSERJjPfl_JYWiHcgk",
+      authDomain: "consultorios-stock.firebaseapp.com",
+      projectId: "consultorios-stock",
+      storageBucket: "consultorios-stock.firebasestorage.app",
+      messagingSenderId: "712455622368",
+      appId: "1:712455622368:web:3379df240df0fa25470a85"
+    };
+    // ▲▲▲ FIN DE CONFIGURACIÓN ▲▲▲
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    // Exponer al scope global para que el resto del script lo use
+    window._db = db;
+    window._fbDoc = doc;
+    window._fbGetDoc = getDoc;
+    window._fbSetDoc = setDoc;
+    window._fbOnSnapshot = onSnapshot;
+    window._fbCollection = collection;
+    window._fbAddDoc = addDoc;
+    window._fbQuery = query;
+    window._fbOrderBy = orderBy;
+    window._fbLimit = limit;
+    window._fbReady = true;
+    window.dispatchEvent(new Event('firebase-ready'));
+  </script>
+</head>
+<body>
+
+<!-- ══ LOGIN SCREEN ══ -->
+<div class="login-screen" id="login-screen">
+  <div style="text-align:center;color:white;margin-bottom:4px">
+    <div style="font-size:32px">🦷</div>
+    <div style="font-size:18px;font-weight:700;margin-top:8px">Consultorio Odontológico</div>
+    <div style="font-size:13px;opacity:.7;margin-top:4px">Control de Stock</div>
+  </div>
+  <div class="login-box">
+    <h2>Iniciar sesión</h2>
+    <p>Seleccioná tu usuario e ingresá tu PIN</p>
+    <div class="user-grid" id="user-grid"></div>
+    <div class="pin-wrap" id="pin-wrap" style="display:none">
+      <div style="font-size:12px;color:var(--text-s);text-align:center" id="pin-label">Ingresá tu PIN</div>
+      <div class="pin-dots" id="pin-dots">
+        <div class="pin-dot"></div><div class="pin-dot"></div>
+        <div class="pin-dot"></div><div class="pin-dot"></div>
+      </div>
+      <div class="numpad" id="numpad"></div>
+      <div class="login-err" id="login-err"></div>
+    </div>
+    <button onclick="seleccionarUsuario(null)" style="width:100%;margin-top:4px;font-size:12px;color:var(--text-s)">← Cambiar usuario</button>
+  </div>
+</div>
+
+<!-- ══ APP ══ -->
+<header>
+  <div>
+    <h1>🦷 Control de Stock — Consultorio Odontológico</h1>
+    <small id="fecha-sub"></small>
+  </div>
+  <div style="display:flex;align-items:center;gap:10px">
+    <div class="user-badge" id="user-badge">
+      <div class="user-dot" id="user-dot-header">?</div>
+      <span id="user-name-header">—</span>
+    </div>
+    <button onclick="cerrarSesion()" style="font-size:12px;padding:5px 10px;background:rgba(255,255,255,.15);color:white;border-color:rgba(255,255,255,.3)">Salir</button>
+  </div>
+</header>
+
+<div class="tabs" id="main-tabs">
+  <div class="tab active" onclick="showTab('inventario',this)">📦 Inventario</div>
+  <div class="tab" onclick="showTab('prestaciones',this)">🦷 Prestaciones</div>
+  <div class="tab" onclick="showTab('historial-tab',this)">📋 Historial</div>
+  <div class="tab admin-only" id="tab-admin" onclick="showTab('admin',this)">⚙️ Administración</div>
+</div>
+
+<!-- ══ INVENTARIO ══ -->
+<div class="page active" id="page-inventario">
+  <div class="toolbar">
+    <button class="accent" onclick="abrirRegistrar()">🦷 Registrar prestación</button>
+    <button onclick="abrirMovimiento(null,'in')">📥 Entrada manual</button>
+    <button class="admin-only show" onclick="abrirAgregarMat()">+ Material</button>
+    <input type="text" class="search-box" id="buscar-mat" placeholder="Buscar material..." oninput="renderTabla()" style="margin-left:auto">
+  </div>
+  <div class="stats" id="stats"></div>
+  <div class="alert-bar" id="alert-bar"></div>
+  <div class="section">
+    <h2>Inventario de insumos</h2>
+    <div class="table-wrap">
+      <table>
+        <thead><tr>
+          <th>Material / Insumo</th>
+          <th style="text-align:center">Stock</th>
+          <th style="text-align:center">Mínimo</th>
+          <th>Nivel</th>
+          <th>Estado</th>
+          <th>Vencimiento</th>
+          <th>Acciones</th>
+        </tr></thead>
+        <tbody id="tabla"></tbody>
+      </table>
+    </div>
+  </div>
+  <div class="section">
+    <h2>Últimos movimientos</h2>
+    <div class="table-wrap"><div class="hist-list" id="hist-mini"></div></div>
+  </div>
+</div>
+
+<!-- ══ PRESTACIONES ══ -->
+<div class="page" id="page-prestaciones">
+  <div class="toolbar">
+    <button class="accent" onclick="abrirRegistrar()">🦷 Registrar prestación del día</button>
+    <button class="admin-only show" onclick="abrirNuevaPrest()">+ Nueva prestación</button>
+    <input type="text" class="search-box" id="buscar-prest" placeholder="Buscar prestación..." oninput="renderPrestaciones()">
+    <label style="font-size:12px;color:var(--text-s);display:flex;align-items:center;gap:5px;cursor:pointer">
+      <input type="checkbox" id="solo-cfg" onchange="renderPrestaciones()"> Solo con insumos
+    </label>
+  </div>
+  <div class="section" style="margin-top:14px">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+      <h2 style="margin-bottom:0">Prestaciones</h2>
+      <span id="prest-count" style="font-size:12px;color:var(--text-s)"></span>
+    </div>
+    <div id="prest-lista"></div>
+  </div>
+</div>
+
+<!-- ══ HISTORIAL ══ -->
+<div class="page" id="page-historial-tab">
+  <div class="toolbar">
+    <button onclick="exportCSV()">⬇️ Exportar CSV</button>
+    <select id="hist-filtro-user" onchange="renderHistFull()" style="padding:6px 10px;border:1px solid var(--borde);border-radius:6px;font-size:13px">
+      <option value="">Todos los usuarios</option>
+    </select>
+    <button class="admin-only show danger-btn" onclick="if(confirm('¿Borrar todo el historial?')){hist=[];save();renderHistFull();render()}">🗑️ Limpiar</button>
+  </div>
+  <div class="section" style="margin-top:14px">
+    <h2>Todos los movimientos</h2>
+    <div class="table-wrap"><div class="hist-list" id="hist-full" style="max-height:520px"></div></div>
+  </div>
+</div>
+
+<!-- ══ ADMINISTRACIÓN ══ -->
+<div class="page" id="page-admin">
+  <div class="admin-grid">
+
+    <!-- Usuarios -->
+    <div class="admin-card">
+      <div class="admin-card-head" style="background:var(--azul)">
+        <span style="color:white;font-weight:700;font-size:14px">👤 Usuarios</span>
+        <button onclick="abrirNuevoUsuario()" style="font-size:12px;padding:5px 11px;background:white;color:var(--azul);border-color:white">+ Nuevo</button>
+      </div>
+      <div class="admin-card-body">Gestioná los profesionales y sus PINs. El admin tiene acceso total.</div>
+      <div class="admin-list" id="admin-usuarios"></div>
+    </div>
+
+    <!-- Insumos -->
+    <div class="admin-card">
+      <div class="admin-card-head" style="background:var(--azul-m)">
+        <span style="color:white;font-weight:700;font-size:14px">📦 Insumos</span>
+        <button onclick="abrirAgregarMat()" style="font-size:12px;padding:5px 11px;background:white;color:var(--azul-m);border-color:white">+ Nuevo</button>
+      </div>
+      <div class="admin-card-body">Editá nombre, stock, mínimo y vencimiento de cada insumo.</div>
+      <div class="admin-list" id="admin-insumos"></div>
+    </div>
+
+    <!-- Ajuste rápido -->
+    <div class="admin-card">
+      <div class="admin-card-head" style="background:#2d6a4f">
+        <span style="color:white;font-weight:700;font-size:14px">🔧 Ajuste de stock</span>
+      </div>
+      <div class="admin-card-body">Corregí el stock de cualquier insumo directamente (inventario físico).</div>
+      <div style="padding:14px 18px">
+        <div class="field"><label>Insumo</label><select id="adj-mat" onchange="previewAdj()" style="width:100%"></select></div>
+        <div class="field"><label>Nuevo stock</label><input id="adj-cant" type="number" min="0" step="0.01" oninput="previewAdj()" style="width:100%"></div>
+        <div id="adj-preview" style="font-size:12px;color:var(--text-s);margin-bottom:10px;min-height:18px"></div>
+        <button class="primary" onclick="confirmarAdj()" style="width:100%">Aplicar ajuste</button>
+      </div>
+    </div>
+
+    <!-- Respaldo -->
+    <div class="admin-card">
+      <div class="admin-card-head" style="background:#495057">
+        <span style="color:white;font-weight:700;font-size:14px">💾 Respaldo</span>
+      </div>
+      <div class="admin-card-body">Exportá e importá todos los datos para no perderlos.</div>
+      <div style="padding:14px 18px;display:flex;flex-direction:column;gap:8px">
+        <button onclick="exportarRespaldo()" style="width:100%">⬇️ Exportar respaldo (.json)</button>
+        <label style="width:100%">
+          <button onclick="document.getElementById('imp-file').click()" style="width:100%">⬆️ Importar respaldo (.json)</button>
+          <input type="file" id="imp-file" accept=".json" style="display:none" onchange="importarRespaldo(this)">
+        </label>
+        <button onclick="exportCSV()" style="width:100%">📄 Exportar planilla (.csv)</button>
+        <button onclick="resetearDatos()" style="width:100%;color:var(--rojo);border-color:var(--rojo-cl)">🗑️ Resetear todos los datos</button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ══ MODALES ══ -->
+<!-- Material -->
+<div class="overlay" id="modal-mat">
+  <div class="modal">
+    <h3 id="mat-titulo">Nuevo material</h3>
+    <div class="field"><label>Nombre</label><input id="m-nombre" type="text" placeholder="ej: Guantes nitrilo"></div>
+    <div class="field"><label>Categoría</label>
+      <select id="m-cat">
+        <option>General</option><option>Anestesia y cirugía</option><option>Operatoria y resinas</option>
+        <option>Endodoncia</option><option>Prótesis y acrílicos</option><option>Ortodoncia</option>
+        <option>Prevención</option><option>Instrumental rotatorio</option><option>Implantes</option>
+        <option>Esterilización e higiene</option><option>Radiografía</option><option>Varios</option>
+      </select>
+    </div>
+    <div class="field"><label>Stock actual</label><input id="m-stock" type="number" min="0" step="0.01" value="0"></div>
+    <div class="field"><label>Stock mínimo (alerta)</label><input id="m-min" type="number" min="0" step="0.01" value="0"></div>
+    <div class="field"><label>Fecha de vencimiento (opcional, mes/año)</label><input id="m-venc" type="month"></div>
+    <div class="field"><label>Observaciones</label><input id="m-obs" type="text" placeholder="ej: 1 en uso, comprar pronto..."></div>
+    <div class="modal-btns">
+      <button onclick="cerrar('modal-mat')">Cancelar</button>
+      <button class="primary" onclick="guardarMat()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Movimiento manual -->
+<div class="overlay" id="modal-mov">
+  <div class="modal">
+    <h3>Registrar movimiento</h3>
+    <div class="field"><label>Material</label><select id="mov-mat" style="width:100%"></select></div>
+    <div class="field"><label>Tipo</label>
+      <select id="mov-tipo">
+        <option value="in">📥 Entrada (compra / reposición)</option>
+        <option value="out">📤 Salida (consumo / uso)</option>
+      </select>
+    </div>
+    <div class="field"><label>Cantidad</label><input id="mov-cant" type="number" min="0.01" step="0.01" value="1"></div>
+    <div class="field"><label>Nota (opcional)</label><input id="mov-nota" type="text"></div>
+    <div class="modal-btns">
+      <button onclick="cerrar('modal-mov')">Cancelar</button>
+      <button class="primary" onclick="confirmarMov()">Confirmar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Configurar insumos de prestación -->
+<div class="overlay" id="modal-cfg">
+  <div class="modal">
+    <h3 id="cfg-titulo">Configurar insumos</h3>
+    <div style="font-size:12px;color:var(--text-s);margin-bottom:12px" id="cfg-desc"></div>
+    <div style="font-size:11px;font-weight:700;color:var(--text-s);margin-bottom:8px">INSUMOS QUE CONSUME</div>
+    <div id="cfg-lines"></div>
+    <button onclick="agregarLineaCfg()" style="width:100%;margin-top:4px;color:var(--azul);border-color:var(--azul-cl)">+ Agregar insumo</button>
+    <div class="modal-btns">
+      <button onclick="cerrar('modal-cfg')">Cancelar</button>
+      <button class="primary" onclick="guardarCfg()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Registrar prestación -->
+<div class="overlay" id="modal-reg">
+  <div class="modal">
+    <h3>🦷 Registrar prestación</h3>
+    <div class="field"><label>Prestación</label>
+      <select id="reg-sel" onchange="previewReg()" style="width:100%">
+        <option value="">-- Seleccioná --</option>
+      </select>
+    </div>
+    <div class="field"><label>Cantidad de veces</label>
+      <input id="reg-cant" type="number" min="1" value="1" oninput="previewReg()">
+    </div>
+    <div class="field"><label>Paciente / nota (opcional)</label>
+      <input id="reg-nota" type="text" placeholder="ej: García, molar inf...">
+    </div>
+    <div id="reg-preview"></div>
+    <div class="modal-btns">
+      <button onclick="cerrar('modal-reg')">Cancelar</button>
+      <button class="accent" onclick="confirmarReg()">✅ Confirmar y descontar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Nueva prestación -->
+<div class="overlay" id="modal-prest">
+  <div class="modal">
+    <h3 id="prest-titulo">Nueva prestación</h3>
+    <div class="field"><label>Nombre</label><input id="p-nombre" type="text" placeholder="ej: Operatoria simple (1 cara)"></div>
+    <div class="field"><label>Categoría</label>
+      <select id="p-cat">
+        <option>Consultas</option><option>Operatoria</option><option>Endodoncia</option>
+        <option>Prótesis</option><option>Ortodoncia</option><option>Periodoncia</option>
+        <option>Cirugía</option><option>Prevención</option><option>Odontopediatría</option>
+        <option>Implantes</option><option>Blanqueamiento</option><option>Otras</option>
+      </select>
+    </div>
+    <div class="field"><label>Duración (opcional)</label><input id="p-dur" type="text" placeholder="ej: 40 minutos"></div>
+    <div class="modal-btns">
+      <button onclick="cerrar('modal-prest')">Cancelar</button>
+      <button class="primary" onclick="guardarPrest()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Nuevo usuario -->
+<div class="overlay" id="modal-user">
+  <div class="modal">
+    <h3 id="user-titulo">Nuevo usuario</h3>
+    <div class="field"><label>Nombre completo</label><input id="u-nombre" type="text" placeholder="ej: Dra. Paola García"></div>
+    <div class="field"><label>Rol</label>
+      <select id="u-rol">
+        <option value="prof">Profesional</option>
+        <option value="admin">Administrador</option>
+      </select>
+    </div>
+    <div class="field"><label>PIN (4 dígitos)</label><input id="u-pin" type="password" maxlength="4" placeholder="****" inputmode="numeric"></div>
+    <div class="field"><label>Color</label>
+      <select id="u-color">
+        <option value="#2563A8">Azul</option><option value="#1A7A4A">Verde</option>
+        <option value="#842029">Rojo</option><option value="#4C3494">Violeta</option>
+        <option value="#856404">Amarillo</option><option value="#0891b2">Celeste</option>
+        <option value="#be185d">Rosa</option><option value="#9a3412">Naranja</option>
+      </select>
+    </div>
+    <div class="modal-btns">
+      <button onclick="cerrar('modal-user')">Cancelar</button>
+      <button class="primary" onclick="guardarUsuario()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ══════════════════════════════════════════════════════════════════════════════
+// DATOS INICIALES
+// ══════════════════════════════════════════════════════════════════════════════
+
+const K_MATS='odo_v4_mats', K_HIST='odo_v4_hist', K_CFG='odo_v4_cfg',
+      K_PRESTS='odo_v4_prests', K_USERS='odo_v4_users';
+
+// Stock inicial extraído del PDF
+const MATS_INIT = [
+  {id:1,nombre:'Agua oxigenada 10%',cat:'General',stock:3,minimo:1,venc:null,obs:'1 en uso'},
+  {id:2,nombre:'Silicona por condensación Z Plus',cat:'Prótesis y acrílicos',stock:1,minimo:1,venc:'2025-09',obs:'Queda poco'},
+  {id:3,nombre:'Silicona liviana Panasil',cat:'Prótesis y acrílicos',stock:4,minimo:2,venc:'2026-02',obs:''},
+  {id:4,nombre:'Barbijos x10 blancos',cat:'Esterilización e higiene',stock:5,minimo:2,venc:null,obs:''},
+  {id:5,nombre:'Barbijos x10 rosas',cat:'Esterilización e higiene',stock:2,minimo:2,venc:null,obs:''},
+  {id:6,nombre:'Compresas x125',cat:'General',stock:1,minimo:1,venc:null,obs:'1 en uso'},
+  {id:7,nombre:'Compresas rosas x125',cat:'General',stock:2,minimo:1,venc:null,obs:'1 en uso'},
+  {id:8,nombre:'Suctores x100',cat:'General',stock:3,minimo:1,venc:null,obs:'1 en uso'},
+  {id:9,nombre:'Algodón 140gr',cat:'General',stock:1,minimo:1,venc:null,obs:''},
+  {id:10,nombre:'Vasos descartables x100',cat:'General',stock:29,minimo:5,venc:null,obs:''},
+  {id:11,nombre:'Torundas de algodón x50u',cat:'General',stock:17,minimo:5,venc:null,obs:'1 paq x500 nuevo y 1 en uso'},
+  {id:12,nombre:'Film para sillón',cat:'Esterilización e higiene',stock:1,minimo:1,venc:null,obs:''},
+  {id:13,nombre:'Film para cabezal',cat:'Esterilización e higiene',stock:1,minimo:1,venc:null,obs:''},
+  {id:14,nombre:'Gasas x500gr (5x5)',cat:'General',stock:1,minimo:1,venc:null,obs:'En uso'},
+  {id:15,nombre:'Gasas grandes',cat:'General',stock:1,minimo:1,venc:null,obs:''},
+  {id:16,nombre:'Fijador',cat:'Radiografía',stock:1,minimo:1,venc:'2028-03',obs:''},
+  {id:17,nombre:'Revelador',cat:'Radiografía',stock:1,minimo:1,venc:'2028-03',obs:''},
+  {id:18,nombre:'Suturas de nylon 4.0 x12',cat:'Anestesia y cirugía',stock:1,minimo:1,venc:null,obs:'10u'},
+  {id:19,nombre:'Anestubos Totalcaína',cat:'Anestesia y cirugía',stock:20,minimo:10,venc:'2026-11',obs:''},
+  {id:20,nombre:'Ácido fosfórico 35% Densell',cat:'Operatoria y resinas',stock:1,minimo:1,venc:'2028-02',obs:''},
+  {id:21,nombre:'Ácido fosfórico 35% Klepp',cat:'Operatoria y resinas',stock:3,minimo:1,venc:'2025-09',obs:''},
+  {id:22,nombre:'Cubeta para topicación fluor niños',cat:'Prevención',stock:1,minimo:1,venc:null,obs:''},
+  {id:23,nombre:'Radiografías periapicales adulto x100',cat:'Radiografía',stock:1,minimo:1,venc:null,obs:''},
+  {id:24,nombre:'Radiografías periapicales niños x100',cat:'Radiografía',stock:1,minimo:1,venc:null,obs:'En uso'},
+  {id:25,nombre:'Agujas 21mm cortas x100',cat:'Anestesia y cirugía',stock:1,minimo:1,venc:null,obs:'En uso'},
+  {id:26,nombre:'Agujas 12mm extra cortas x100',cat:'Anestesia y cirugía',stock:1,minimo:1,venc:null,obs:'En uso'},
+  {id:27,nombre:'Papel de articular',cat:'General',stock:9,minimo:2,venc:null,obs:'9 libros'},
+  {id:28,nombre:'Tiras de acetato x100',cat:'Operatoria y resinas',stock:1,minimo:1,venc:null,obs:'En uso'},
+  {id:29,nombre:'Tiras de pulido de acero x12',cat:'Instrumental rotatorio',stock:1,minimo:1,venc:null,obs:''},
+  {id:30,nombre:'Tiras de pulido resina x150',cat:'Instrumental rotatorio',stock:1,minimo:1,venc:null,obs:''},
+  {id:31,nombre:'Brochas para profilaxis x100',cat:'Prevención',stock:1,minimo:1,venc:null,obs:'67u'},
+  {id:32,nombre:'Vaselina sólida',cat:'General',stock:2,minimo:1,venc:'2025-01',obs:''},
+  {id:33,nombre:'Vaselina líquida',cat:'General',stock:1,minimo:1,venc:null,obs:'Sin fecha de vto'},
+  {id:34,nombre:'Hoja de bisturí N°11',cat:'Anestesia y cirugía',stock:29,minimo:5,venc:null,obs:''},
+  {id:35,nombre:'Hoja de bisturí N°15',cat:'Anestesia y cirugía',stock:14,minimo:5,venc:null,obs:''},
+  {id:36,nombre:'Dycal',cat:'Operatoria y resinas',stock:2,minimo:1,venc:'2025-05',obs:''},
+  {id:37,nombre:'Adhesivo Megabond',cat:'Operatoria y resinas',stock:1,minimo:1,venc:'2025-08',obs:''},
+  {id:38,nombre:'Pastillas evidenciadoras de placa',cat:'Prevención',stock:4,minimo:1,venc:null,obs:''},
+  {id:39,nombre:'Resina Ultrafill A1',cat:'Operatoria y resinas',stock:1,minimo:1,venc:'2026-10',obs:''},
+  {id:40,nombre:'Resina Ultrafill A2',cat:'Operatoria y resinas',stock:4,minimo:2,venc:'2028-02',obs:''},
+  {id:41,nombre:'Resina Ultrafill A3',cat:'Operatoria y resinas',stock:4,minimo:2,venc:'2028-06',obs:''},
+  {id:42,nombre:'Resina Ultrafill A3.5',cat:'Operatoria y resinas',stock:2,minimo:1,venc:'2028-06',obs:''},
+  {id:43,nombre:'Resina Ultrafill A4',cat:'Operatoria y resinas',stock:1,minimo:1,venc:'2027-04',obs:''},
+  {id:44,nombre:'Resina Ultrafill OA2',cat:'Operatoria y resinas',stock:5,minimo:2,venc:'2027-03',obs:''},
+  {id:45,nombre:'Resina Ultrafill OA3',cat:'Operatoria y resinas',stock:2,minimo:1,venc:'2027-07',obs:''},
+  {id:46,nombre:'Ultraflow A3',cat:'Operatoria y resinas',stock:2,minimo:1,venc:'2028-06',obs:''},
+  {id:47,nombre:'Ultraflow A2',cat:'Operatoria y resinas',stock:0,minimo:1,venc:null,obs:'Sin stock'},
+  {id:48,nombre:'Sellador de F.S. y F. fotopolimerizable',cat:'Prevención',stock:1,minimo:1,venc:'2027-08',obs:''},
+  {id:49,nombre:'Barrera gingival',cat:'Operatoria y resinas',stock:2,minimo:1,venc:'2026-02',obs:''},
+  {id:50,nombre:'Microbrush chico',cat:'General',stock:3,minimo:1,venc:null,obs:''},
+  {id:51,nombre:'Microbrush mediano',cat:'General',stock:2,minimo:1,venc:null,obs:''},
+  {id:52,nombre:'Transbond',cat:'Ortodoncia',stock:1,minimo:1,venc:'2027-04',obs:''},
+  {id:53,nombre:'Placas 0.04',cat:'Ortodoncia',stock:8,minimo:2,venc:null,obs:''},
+  {id:54,nombre:'Placas blandas 0.06 blanqueamiento',cat:'Ortodoncia',stock:2,minimo:1,venc:null,obs:''},
+  {id:55,nombre:'Placas rígidas 0.06',cat:'Ortodoncia',stock:7,minimo:2,venc:null,obs:''},
+  {id:56,nombre:'Placas rígidas 0.08',cat:'Ortodoncia',stock:20,minimo:5,venc:null,obs:''},
+  {id:57,nombre:'Placas rígidas rojo',cat:'Ortodoncia',stock:7,minimo:2,venc:null,obs:''},
+  {id:58,nombre:'Alcohol 70% 500ml',cat:'Esterilización e higiene',stock:0,minimo:2,venc:null,obs:'Sin stock'},
+  {id:59,nombre:'Alcohol 96% 1lt',cat:'Esterilización e higiene',stock:4,minimo:1,venc:null,obs:'1 en uso'},
+  {id:60,nombre:'Detergente bienzimático',cat:'Esterilización e higiene',stock:2,minimo:1,venc:null,obs:'1 en uso'},
+  {id:61,nombre:'Iodopovidona 500ml',cat:'Esterilización e higiene',stock:2,minimo:1,venc:null,obs:'En uso'},
+  {id:62,nombre:'Agua destilada',cat:'General',stock:1,minimo:1,venc:null,obs:'Le queda poco'},
+  {id:63,nombre:'Jeringas 1ml',cat:'General',stock:26,minimo:10,venc:null,obs:''},
+  {id:64,nombre:'Jeringas 5ml',cat:'General',stock:73,minimo:10,venc:null,obs:''},
+  {id:65,nombre:'Jeringas 10ml',cat:'General',stock:89,minimo:10,venc:null,obs:''},
+  {id:66,nombre:'Agujas hipodérmicas marrón',cat:'General',stock:71,minimo:10,venc:null,obs:''},
+  {id:67,nombre:'Agujas hipodérmicas verde',cat:'General',stock:3,minimo:5,venc:null,obs:''},
+  {id:68,nombre:'Kit ortodoncia GUM',cat:'Ortodoncia',stock:3,minimo:1,venc:null,obs:''},
+  {id:69,nombre:'Alginato',cat:'Prótesis y acrílicos',stock:2,minimo:1,venc:'2030-02',obs:''},
+  {id:70,nombre:'Guantes de latex XS nitrilo',cat:'Esterilización e higiene',stock:6,minimo:2,venc:null,obs:''},
+  {id:71,nombre:'Guantes de latex M',cat:'Esterilización e higiene',stock:1,minimo:2,venc:null,obs:''},
+  {id:72,nombre:'Guantes de latex M nitrilo',cat:'Esterilización e higiene',stock:1,minimo:2,venc:null,obs:''},
+  {id:73,nombre:'Goma dique Blue Santuary',cat:'Endodoncia',stock:1,minimo:1,venc:null,obs:'En uso'},
+  {id:74,nombre:'Yeso Densita',cat:'Prótesis y acrílicos',stock:1,minimo:1,venc:null,obs:''},
+  {id:75,nombre:'Yeso piedra',cat:'Prótesis y acrílicos',stock:17,minimo:3,venc:null,obs:''},
+  {id:76,nombre:'Cuñas de madera x100',cat:'Operatoria y resinas',stock:1,minimo:1,venc:null,obs:''},
+  {id:77,nombre:'Resina Camaleónica Kit',cat:'Operatoria y resinas',stock:1,minimo:1,venc:'2027-03',obs:''},
+  {id:78,nombre:'Lidocaína',cat:'Anestesia y cirugía',stock:1,minimo:1,venc:'2028-05',obs:''},
+  {id:79,nombre:'Fluor en gel neutro Densell',cat:'Prevención',stock:2,minimo:1,venc:'2024-06',obs:''},
+  {id:80,nombre:'Fluor en gel neutro Tedequim',cat:'Prevención',stock:1,minimo:1,venc:null,obs:''},
+  {id:81,nombre:'Fluor en gel acidulado Densell',cat:'Prevención',stock:2,minimo:1,venc:null,obs:'Uno en uso'},
+  {id:82,nombre:'Fluoruro diamino de plata',cat:'Prevención',stock:1,minimo:1,venc:'2024-07',obs:''},
+  {id:83,nombre:'Iodoformo Tedequim',cat:'Endodoncia',stock:1,minimo:1,venc:'2028-03',obs:''},
+  {id:84,nombre:'Iodoformo Egeo',cat:'Endodoncia',stock:1,minimo:1,venc:'2027-02',obs:'En uso'},
+  {id:85,nombre:'Formocresol',cat:'Odontopediatría',stock:4,minimo:1,venc:'2021-04',obs:'Vencido'},
+  {id:86,nombre:'Barniz fluoruro de sodio 5%',cat:'Prevención',stock:1,minimo:1,venc:null,obs:'Sin fecha'},
+  {id:87,nombre:'Flourogel',cat:'Prevención',stock:1,minimo:1,venc:'2025-04',obs:''},
+  {id:88,nombre:'Hidróxido de calcio',cat:'Endodoncia',stock:2,minimo:1,venc:'2019-05',obs:''},
+  {id:89,nombre:'Pasta tri antibiótica / Trimix',cat:'Endodoncia',stock:2,minimo:1,venc:'2027-03',obs:''},
+  {id:90,nombre:'Pasta lentamente reabsorbible Maisto',cat:'Endodoncia',stock:1,minimo:1,venc:'2028-03',obs:''},
+  {id:91,nombre:'Hipoclorito 2.5%',cat:'Endodoncia',stock:1,minimo:1,venc:null,obs:'Preparado en consul'},
+  {id:92,nombre:'Kit blanqueamiento Pola Office',cat:'Blanqueamiento',stock:1,minimo:1,venc:'2027-05',obs:'Líquido 07/26 polvo 05/27'},
+  {id:93,nombre:'Blanqueamiento ambulatorio 10%',cat:'Blanqueamiento',stock:9,minimo:2,venc:'2027-07',obs:''},
+  {id:94,nombre:'Clarident microabrasión',cat:'Blanqueamiento',stock:1,minimo:1,venc:'2024-10',obs:''},
+  {id:95,nombre:'Endo Ice Klepp',cat:'Endodoncia',stock:2,minimo:1,venc:null,obs:'En uso'},
+  {id:96,nombre:'Z Prime',cat:'Prótesis y acrílicos',stock:1,minimo:1,venc:'2027-09',obs:''},
+  {id:97,nombre:'IRM',cat:'Endodoncia',stock:2,minimo:1,venc:'2025-09',obs:''},
+  {id:98,nombre:'Ionómero V Tipo 1 Ionomax',cat:'Operatoria y resinas',stock:2,minimo:1,venc:'2025-01',obs:'Uno en uso'},
+  {id:99,nombre:'Ionómero V Tipo 2 Ionomax',cat:'Operatoria y resinas',stock:2,minimo:1,venc:'2026-03',obs:''},
+  {id:100,nombre:'Ionómero V Tipo 2 Klepp',cat:'Operatoria y resinas',stock:2,minimo:1,venc:'2027-04',obs:''},
+  {id:101,nombre:'Endoseal',cat:'Endodoncia',stock:2,minimo:1,venc:'2028-09',obs:''},
+  {id:102,nombre:'Cemento Dual All Cem 2',cat:'Prótesis y acrílicos',stock:1,minimo:1,venc:'2027-06',obs:'En uso'},
+  {id:103,nombre:'Cemento fosfato de zinc',cat:'Prótesis y acrílicos',stock:1,minimo:1,venc:'2027-06',obs:''},
+  {id:104,nombre:'Liner base revestimiento para cavidades',cat:'Operatoria y resinas',stock:2,minimo:1,venc:'2026-07',obs:''},
+  {id:105,nombre:'Polvo para profilaxis 100gr Tedequim',cat:'Prevención',stock:2,minimo:1,venc:'2028-05',obs:''},
+  {id:106,nombre:'Banda de fibra de vidrio Vactrise',cat:'Operatoria y resinas',stock:2,minimo:1,venc:null,obs:'Una en uso'},
+  {id:107,nombre:'Mandril',cat:'Instrumental rotatorio',stock:17,minimo:3,venc:null,obs:''},
+  {id:108,nombre:'Discos de pulido morado',cat:'Instrumental rotatorio',stock:9,minimo:2,venc:null,obs:''},
+  {id:109,nombre:'Postes de fibra de vidrio x5',cat:'Endodoncia',stock:1,minimo:1,venc:null,obs:''},
+  {id:110,nombre:'Postes de fibra de vidrio x100 rojo',cat:'Endodoncia',stock:1,minimo:1,venc:null,obs:''},
+  {id:111,nombre:'Postes de fibra de vidrio x100 amarillo',cat:'Endodoncia',stock:1,minimo:1,venc:null,obs:''},
+  {id:112,nombre:'Separadores molares verde agua',cat:'Ortodoncia',stock:14,minimo:3,venc:null,obs:''},
+  {id:113,nombre:'Separadores interdentales verde',cat:'Ortodoncia',stock:18,minimo:3,venc:null,obs:'1 puesto'},
+  {id:114,nombre:'Conos de gutapercha principales 30',cat:'Endodoncia',stock:5,minimo:2,venc:null,obs:''},
+  {id:115,nombre:'Conos de gutapercha principales 35',cat:'Endodoncia',stock:11,minimo:2,venc:null,obs:''},
+  {id:116,nombre:'Conos de gutapercha accesorios 30',cat:'Endodoncia',stock:10,minimo:2,venc:null,obs:''},
+  {id:117,nombre:'Conos de gutapercha accesorios 35',cat:'Endodoncia',stock:3,minimo:2,venc:null,obs:''},
+  {id:118,nombre:'Conos de papel 15-25',cat:'Endodoncia',stock:2,minimo:1,venc:null,obs:''},
+  {id:119,nombre:'Conos de papel 15-30',cat:'Endodoncia',stock:1,minimo:1,venc:null,obs:''},
+  {id:120,nombre:'MTA',cat:'Endodoncia',stock:1,minimo:1,venc:null,obs:'Abierto'},
+  {id:121,nombre:'Abrebocas adultos',cat:'General',stock:21,minimo:3,venc:null,obs:''},
+  {id:122,nombre:'Abrebocas niños',cat:'General',stock:5,minimo:2,venc:null,obs:''},
+  {id:123,nombre:'Cubetas parciales',cat:'Prótesis y acrílicos',stock:20,minimo:3,venc:null,obs:''},
+  {id:124,nombre:'Cubetas rimlock',cat:'Prótesis y acrílicos',stock:20,minimo:3,venc:null,obs:''},
+  {id:125,nombre:'Cubetas 5/6',cat:'Prótesis y acrílicos',stock:53,minimo:5,venc:null,obs:''},
+  {id:126,nombre:'Cubetas 3/4',cat:'Prótesis y acrílicos',stock:36,minimo:5,venc:null,obs:''},
+  {id:127,nombre:'Cubetas 1/2',cat:'Prótesis y acrílicos',stock:55,minimo:5,venc:null,obs:''},
+  {id:128,nombre:'Monómero x500',cat:'Prótesis y acrílicos',stock:2,minimo:1,venc:'2027-11',obs:''},
+  {id:129,nombre:'Acrílico rosa auto 100gr',cat:'Prótesis y acrílicos',stock:1,minimo:1,venc:null,obs:''},
+  {id:130,nombre:'Acrílico diente 66 coronas y puentes x100gr',cat:'Prótesis y acrílicos',stock:1,minimo:1,venc:'2027-03',obs:'En uso'},
+  {id:131,nombre:'Cubrecamillas 38',cat:'Esterilización e higiene',stock:30,minimo:5,venc:null,obs:''},
+  {id:132,nombre:'Batas',cat:'Esterilización e higiene',stock:17,minimo:3,venc:null,obs:''},
+  {id:133,nombre:'Cofias',cat:'Esterilización e higiene',stock:24,minimo:5,venc:null,obs:''},
+  {id:134,nombre:'Campo para paciente',cat:'Esterilización e higiene',stock:19,minimo:3,venc:null,obs:''},
+  // Implantes
+  {id:135,nombre:'Membrana reabsorbible colágeno SUS-MEM 1.5x2cm',cat:'Implantes',stock:8,minimo:2,venc:'2026-07',obs:'TISSUM'},
+  {id:136,nombre:'Matriz ósea SUS-OSS 0.5g',cat:'Implantes',stock:2,minimo:1,venc:'2029-01',obs:'TISSUM'},
+  {id:137,nombre:'Hidroxiapatita BOS-HA 1.0g',cat:'Implantes',stock:1,minimo:1,venc:'2028-03',obs:'TISSUM'},
+  {id:138,nombre:'Hidroxiapatita BOS-HA 0.5g',cat:'Implantes',stock:3,minimo:1,venc:'2028-08',obs:'TISSUM'},
+  {id:139,nombre:'Implante SIMPLE HI 3.3x8.5 Tree Oss',cat:'Implantes',stock:10,minimo:2,venc:'2030-01',obs:''},
+  {id:140,nombre:'Implante SIMPLE HI 3.3x10 Tree Oss',cat:'Implantes',stock:12,minimo:2,venc:'2029-12',obs:''},
+  {id:141,nombre:'Implante SIMPLE HI 3.3x11.5 Tree Oss',cat:'Implantes',stock:11,minimo:2,venc:'2029-09',obs:''},
+  {id:142,nombre:'Implante SIMPLE HI 3.3x13 Tree Oss',cat:'Implantes',stock:5,minimo:1,venc:'2029-09',obs:''},
+  {id:143,nombre:'Implante HS 3.7x10 Tree Oss',cat:'Implantes',stock:4,minimo:1,venc:'2028-10',obs:''},
+  {id:144,nombre:'Implante HS 3.7x11.5 Tree Oss',cat:'Implantes',stock:1,minimo:1,venc:'2028-07',obs:''},
+  {id:145,nombre:'Implante HS 3.7x13 Tree Oss',cat:'Implantes',stock:14,minimo:2,venc:'2029-01',obs:''},
+  {id:146,nombre:'Implante HS 4.3x8.5 Tree Oss',cat:'Implantes',stock:7,minimo:1,venc:'2028-10',obs:''},
+  // Ortodoncia - arcos
+  {id:147,nombre:'Arco 0.12 NITI SUP',cat:'Ortodoncia',stock:2,minimo:1,venc:null,obs:'Sobres x10'},
+  {id:148,nombre:'Arco 0.14 NITI SUP',cat:'Ortodoncia',stock:39,minimo:5,venc:null,obs:''},
+  {id:149,nombre:'Arco 0.14 NITI INF',cat:'Ortodoncia',stock:15,minimo:5,venc:null,obs:''},
+  {id:150,nombre:'Arco 0.16 NITI SUP',cat:'Ortodoncia',stock:2,minimo:1,venc:null,obs:''},
+  {id:151,nombre:'Arco 0.16 NITI INF',cat:'Ortodoncia',stock:2,minimo:1,venc:null,obs:''},
+  {id:152,nombre:'Arco 0.18 NITI SUP',cat:'Ortodoncia',stock:4,minimo:1,venc:null,obs:''},
+  {id:153,nombre:'Arco 0.18 NITI INF',cat:'Ortodoncia',stock:8,minimo:2,venc:null,obs:''},
+  {id:154,nombre:'Arco 0.20 NITI SUP',cat:'Ortodoncia',stock:13,minimo:3,venc:null,obs:''},
+  {id:155,nombre:'Arco 0.20 NITI INF',cat:'Ortodoncia',stock:12,minimo:3,venc:null,obs:''},
+  {id:156,nombre:'Arco 0.18 ACERO INF',cat:'Ortodoncia',stock:26,minimo:5,venc:null,obs:''},
+  {id:157,nombre:'Arco 17x25 NITI SUP',cat:'Ortodoncia',stock:20,minimo:3,venc:null,obs:''},
+  {id:158,nombre:'Casos ortodoncia cerámica',cat:'Ortodoncia',stock:16,minimo:2,venc:null,obs:''},
+  {id:159,nombre:'Casos ortodoncia metálicos',cat:'Ortodoncia',stock:66,minimo:5,venc:null,obs:''},
+  {id:160,nombre:'Tubos 16 x10u',cat:'Ortodoncia',stock:8,minimo:2,venc:null,obs:''},
+  {id:161,nombre:'Tubos 26 x10u',cat:'Ortodoncia',stock:9,minimo:2,venc:null,obs:''},
+  {id:162,nombre:'Tubos 36 x10u',cat:'Ortodoncia',stock:9,minimo:2,venc:null,obs:''},
+  {id:163,nombre:'Tubos 46 x10u',cat:'Ortodoncia',stock:6,minimo:2,venc:null,obs:''},
+  {id:164,nombre:'Gomas interdentales 1.8" Medium Morelli 1000u',cat:'Ortodoncia',stock:1,minimo:1,venc:null,obs:'En uso'},
+  {id:165,nombre:'Gomas Heavy Jaguar 1.8"',cat:'Ortodoncia',stock:15,minimo:3,venc:null,obs:''},
+  {id:166,nombre:'Cadena larga azul 1.5m',cat:'Ortodoncia',stock:1,minimo:1,venc:null,obs:'Rollo cerrado'},
+  {id:167,nombre:'Cadena media naranja 1.5m',cat:'Ortodoncia',stock:1,minimo:1,venc:null,obs:'Rollo abierto'},
+  {id:168,nombre:'Cemento de ortodoncia Fix',cat:'Ortodoncia',stock:8,minimo:2,venc:null,obs:''},
+  {id:169,nombre:'Bloc Sealer',cat:'Endodoncia',stock:1,minimo:1,venc:null,obs:''},
+  {id:170,nombre:'Separador de acrílico 250ml',cat:'Prótesis y acrílicos',stock:2,minimo:1,venc:null,obs:''},
+  {id:171,nombre:'Material de rebase 40ml',cat:'Prótesis y acrílicos',stock:1,minimo:1,venc:null,obs:'Queda menos de la mitad'},
+  {id:172,nombre:'Hilo retractor 000',cat:'Prótesis y acrílicos',stock:2,minimo:1,venc:null,obs:''},
+  {id:173,nombre:'Silano',cat:'Prótesis y acrílicos',stock:2,minimo:1,venc:'2028-05',obs:''},
+  {id:174,nombre:'Solución fisiológica',cat:'Anestesia y cirugía',stock:1,minimo:1,venc:null,obs:''},
+];
+
+// Prestaciones extraídas del PDF (lista propia del consultorio)
+const PRESTS_INIT = [
+  {id:1,nombre:'Activación de resortes',cat:'Ortodoncia',dur:'15 min'},
+  {id:2,nombre:'Agregado de diente en consultorio',cat:'Prótesis',dur:'35 min'},
+  {id:3,nombre:'Agregado de retenedor en consultorio',cat:'Prótesis',dur:'35 min'},
+  {id:4,nombre:'Ajuste de corona sobre implante',cat:'Implantes',dur:'45-60 min'},
+  {id:5,nombre:'Alivio del dolor',cat:'Consultas',dur:'60 min'},
+  {id:6,nombre:'Ateneo (plan de acción)',cat:'Consultas',dur:'15 min'},
+  {id:7,nombre:'Blanqueamiento (sesión de control)',cat:'Blanqueamiento',dur:'20 min'},
+  {id:8,nombre:'Blanqueamiento ambulatorio (confección)',cat:'Blanqueamiento',dur:'45 min'},
+  {id:9,nombre:'Blanqueamiento en consultorio',cat:'Blanqueamiento',dur:'90 min'},
+  {id:10,nombre:'Cambio de cadena continua',cat:'Ortodoncia',dur:'15 min'},
+  {id:11,nombre:'Carilla de resina directa',cat:'Operatoria',dur:'60 min'},
+  {id:12,nombre:'Carillas PMMA (cementado)',cat:'Prótesis',dur:'45 min'},
+  {id:13,nombre:'Carillas PMMA (tallado y provisorio)',cat:'Prótesis',dur:'90 min'},
+  {id:14,nombre:'Carillas porcelana (cementado)',cat:'Prótesis',dur:'30 min'},
+  {id:15,nombre:'Carillas porcelana (tallado y provisorio)',cat:'Prótesis',dur:'70 min'},
+  {id:16,nombre:'Cementado de brackets',cat:'Ortodoncia',dur:'60 min'},
+  {id:17,nombre:'Certificado bucodental',cat:'Consultas',dur:'30 min'},
+  {id:18,nombre:'Cirugía de implantes',cat:'Implantes',dur:'120 min'},
+  {id:19,nombre:'Cirugía de liberación para ortodoncia',cat:'Cirugía',dur:'40 min'},
+  {id:20,nombre:'Cirugía de tercer molar retenido',cat:'Cirugía',dur:'120 min'},
+  {id:21,nombre:'Colocación de cicatrizales',cat:'Implantes',dur:'30 min'},
+  {id:22,nombre:'Compostura de prótesis removible',cat:'Prótesis',dur:'45 min'},
+  {id:23,nombre:'Conservación alveolar (exo + ROG)',cat:'Cirugía',dur:'60 min'},
+  {id:24,nombre:'Consulta de implantes',cat:'Implantes',dur:'30 min'},
+  {id:25,nombre:'Consulta de urgencia',cat:'Consultas',dur:'20 min'},
+  {id:26,nombre:'Consulta especialista',cat:'Consultas',dur:'30 min'},
+  {id:27,nombre:'Consulta prótesis',cat:'Prótesis',dur:'30 min'},
+  {id:28,nombre:'Contención de ortodoncia fija',cat:'Ortodoncia',dur:'45 min'},
+  {id:29,nombre:'Control de implantes',cat:'Implantes',dur:'15 min'},
+  {id:30,nombre:'Control de ortodoncia Bianca',cat:'Ortodoncia',dur:'70 min'},
+  {id:31,nombre:'Control de ortodoncia Paula',cat:'Ortodoncia',dur:'30 min'},
+  {id:32,nombre:'Control de ortopedia',cat:'Ortodoncia',dur:'30 min'},
+  {id:33,nombre:'Control de prótesis',cat:'Prótesis',dur:'15 min'},
+  {id:34,nombre:'Control ortopedia',cat:'Ortodoncia',dur:'30 min'},
+  {id:35,nombre:'Control prótesis/puente adhesivo',cat:'Prótesis',dur:'30 min'},
+  {id:36,nombre:'Control traumatismo',cat:'Consultas',dur:'25 min'},
+  {id:37,nombre:'Corona metalocerámica (impresión)',cat:'Prótesis',dur:'90 min'},
+  {id:38,nombre:'Corona metalocerámica (instalación)',cat:'Prótesis',dur:'30 min'},
+  {id:39,nombre:'Corona PMMA (impresión)',cat:'Prótesis',dur:'60 min'},
+  {id:40,nombre:'Corona PMMA (instalación)',cat:'Prótesis',dur:'40 min'},
+  {id:41,nombre:'Corona porcelana/zirconio (cementado)',cat:'Prótesis',dur:'30 min'},
+  {id:42,nombre:'Corona porcelana/zirconio (impresión)',cat:'Prótesis',dur:'90 min'},
+  {id:43,nombre:'Cubeta individual (confección)',cat:'Prótesis',dur:'30 min'},
+  {id:44,nombre:'Derivación',cat:'Consultas',dur:'30 min'},
+  {id:45,nombre:'Elevación de piso de seno maxilar',cat:'Implantes',dur:'90 min'},
+  {id:46,nombre:'Entrega de prótesis (post reparación)',cat:'Prótesis',dur:'30 min'},
+  {id:47,nombre:'Extracción compleja (con colgajo)',cat:'Cirugía',dur:'45 min'},
+  {id:48,nombre:'Extracción en retención mucosa',cat:'Cirugía',dur:'120 min'},
+  {id:49,nombre:'Extracción en retención ósea',cat:'Cirugía',dur:'140 min'},
+  {id:50,nombre:'Extracción simple',cat:'Cirugía',dur:'40 min'},
+  {id:51,nombre:'Férula periodontal',cat:'Periodoncia',dur:'35 min'},
+  {id:52,nombre:'Fluor en adultos (cubeta)',cat:'Prevención',dur:'20 min'},
+  {id:53,nombre:'Impresión sobre implantes',cat:'Implantes',dur:'60 min'},
+  {id:54,nombre:'Incrustación (cementado)',cat:'Operatoria',dur:'45 min'},
+  {id:55,nombre:'Incrustación (tallado)',cat:'Operatoria',dur:'60 min'},
+  {id:56,nombre:'Instalación contención removible',cat:'Ortodoncia',dur:'15 min'},
+  {id:57,nombre:'Instalación de ortopedia',cat:'Ortodoncia',dur:'30 min'},
+  {id:58,nombre:'Instalación de prótesis',cat:'Prótesis',dur:'30 min'},
+  {id:59,nombre:'Limpieza boca completa',cat:'Prevención',dur:'20 min'},
+  {id:60,nombre:'Microabrasión',cat:'Operatoria',dur:'40 min'},
+  {id:61,nombre:'Mockup por sector',cat:'Prótesis',dur:'50 min'},
+  {id:62,nombre:'Niños biopulpectomía no vital',cat:'Odontopediatría',dur:'60 min'},
+  {id:63,nombre:'Niños biopulpectomía vital',cat:'Odontopediatría',dur:'60 min'},
+  {id:64,nombre:'Niños cariostático x sesión',cat:'Odontopediatría',dur:'20 min'},
+  {id:65,nombre:'Niños consulta',cat:'Odontopediatría',dur:'30 min'},
+  {id:66,nombre:'Niños corona estampada (instalación)',cat:'Odontopediatría',dur:'30 min'},
+  {id:67,nombre:'Niños corona estampada (toma de impresión)',cat:'Odontopediatría',dur:'40 min'},
+  {id:68,nombre:'Niños extracción de elemento temporario',cat:'Odontopediatría',dur:'35 min'},
+  {id:69,nombre:'Niños inactivación de caries (IRM)',cat:'Odontopediatría',dur:'35 min'},
+  {id:70,nombre:'Niños limpieza y técnica de cepillado',cat:'Odontopediatría',dur:'45 min'},
+  {id:71,nombre:'Niños mantenedor de espacio (instalación)',cat:'Odontopediatría',dur:'30 min'},
+  {id:72,nombre:'Niños mantenedor de espacio (toma de impresión)',cat:'Odontopediatría',dur:'55 min'},
+  {id:73,nombre:'Niños operatoria res/iv',cat:'Odontopediatría',dur:'60 min'},
+  {id:74,nombre:'Niños plano inclinado',cat:'Odontopediatría',dur:'60 min'},
+  {id:75,nombre:'Niños protección pulpar directa',cat:'Odontopediatría',dur:'35 min'},
+  {id:76,nombre:'Niños topicación de fluor',cat:'Odontopediatría',dur:'45 min'},
+  {id:77,nombre:'Operatoria compuesta (2 caras)',cat:'Operatoria',dur:'35 min'},
+  {id:78,nombre:'Operatoria compuesta (3 caras)',cat:'Operatoria',dur:'45 min'},
+  {id:79,nombre:'Operatoria simple (1 cara)',cat:'Operatoria',dur:'40 min'},
+  {id:80,nombre:'Ortopedia (instalación aparatología)',cat:'Ortodoncia',dur:'30 min'},
+  {id:81,nombre:'Ortopedia (toma de impresión)',cat:'Ortodoncia',dur:'45 min'},
+  {id:82,nombre:'Pasta provisoria / IRM (en garantía)',cat:'Operatoria',dur:'20 min'},
+  {id:83,nombre:'Perno bola (cementado)',cat:'Prótesis',dur:'5 min'},
+  {id:84,nombre:'Perno bola (toma de impresión)',cat:'Prótesis',dur:'60 min'},
+  {id:85,nombre:'Perno de fibra de vidrio',cat:'Operatoria',dur:'40 min'},
+  {id:86,nombre:'PFV + corona (impresión)',cat:'Prótesis',dur:'30 min'},
+  {id:87,nombre:'Piercing dental',cat:'Otras',dur:'30 min'},
+  {id:88,nombre:'Placa de contención',cat:'Ortodoncia',dur:'30 min'},
+  {id:89,nombre:'Placa miorrelajante (instalación)',cat:'Prótesis',dur:'30 min'},
+  {id:90,nombre:'Placa miorrelajante (toma de impresión)',cat:'Prótesis',dur:'30 min'},
+  {id:91,nombre:'Placa termoformada (vacuform instalación)',cat:'Ortodoncia',dur:'30 min'},
+  {id:92,nombre:'Placa termoformada (vacuform)',cat:'Ortodoncia',dur:'35 min'},
+  {id:93,nombre:'Primera consulta',cat:'Consultas',dur:'30 min'},
+  {id:94,nombre:'Prot. completa (impresión)',cat:'Prótesis',dur:'20 min'},
+  {id:95,nombre:'Prot. completa (instalación)',cat:'Prótesis',dur:'20 min'},
+  {id:96,nombre:'Prot. completa (prueba de enfilado)',cat:'Prótesis',dur:'20 min'},
+  {id:97,nombre:'Prot. completa (prueba de rodete)',cat:'Prótesis',dur:'25 min'},
+  {id:98,nombre:'Prot. cromo cobalto (instalación)',cat:'Prótesis',dur:'20 min'},
+  {id:99,nombre:'Prot. cromo cobalto (prueba armazón)',cat:'Prótesis',dur:'30 min'},
+  {id:100,nombre:'Prot. cromo cobalto (prueba de enfilado)',cat:'Prótesis',dur:'30 min'},
+  {id:101,nombre:'Prot. cromo cobalto (toma de impresión)',cat:'Prótesis',dur:'45 min'},
+  {id:102,nombre:'Prot. parcial removible (instalación)',cat:'Prótesis',dur:'15 min'},
+  {id:103,nombre:'Prot. parcial removible (prueba de enfilado)',cat:'Prótesis',dur:'30 min'},
+  {id:104,nombre:'Prot. parcial removible (prueba de rodete)',cat:'Prótesis',dur:'30 min'},
+  {id:105,nombre:'Prot. parcial removible (toma de impresión)',cat:'Prótesis',dur:'30 min'},
+  {id:106,nombre:'Prótesis híbrida (instalación)',cat:'Implantes',dur:'30 min'},
+  {id:107,nombre:'Prótesis híbrida (prueba armazón y enfilado)',cat:'Implantes',dur:'60 min'},
+  {id:108,nombre:'Prótesis híbrida (prueba de enfilado)',cat:'Implantes',dur:'50 min'},
+  {id:109,nombre:'Prótesis híbrida (toma de impresión)',cat:'Implantes',dur:'70 min'},
+  {id:110,nombre:'Provisorio de acrílico (en consultorio)',cat:'Prótesis',dur:'90 min'},
+  {id:111,nombre:'Provisorio de acrílico en protesista (tallado)',cat:'Prótesis',dur:'50 min'},
+  {id:112,nombre:'Prueba de enfilado',cat:'Prótesis',dur:'30 min'},
+  {id:113,nombre:'Prueba de rodete',cat:'Prótesis',dur:'30 min'},
+  {id:114,nombre:'Puente adhesivo de 1 elemento',cat:'Prótesis',dur:'50 min'},
+  {id:115,nombre:'Puente adhesivo de 2 o más elementos',cat:'Prótesis',dur:'90 min'},
+  {id:116,nombre:'Radiografía periapical',cat:'Diagnóstico',dur:'15 min'},
+  {id:117,nombre:'Raspaje y alisado por sector (manual)',cat:'Periodoncia',dur:'45 min'},
+  {id:118,nombre:'Rebasado de prótesis (en consultorio)',cat:'Prótesis',dur:'20 min'},
+  {id:119,nombre:'Rebasado en laboratorio (toma de impresión)',cat:'Prótesis',dur:'30 min'},
+  {id:120,nombre:'Recementado de corona',cat:'Prótesis',dur:'30 min'},
+  {id:121,nombre:'Recementado de corona (en garantía)',cat:'Prótesis',dur:'30 min'},
+  {id:122,nombre:'Recementado de puente (en garantía)',cat:'Prótesis',dur:'30 min'},
+  {id:123,nombre:'Recementado puente',cat:'Prótesis',dur:'30 min'},
+  {id:124,nombre:'Reco post endodoncia compleja (tallado)',cat:'Operatoria',dur:'60 min'},
+  {id:125,nombre:'Reco post endodoncia simple (cementado)',cat:'Operatoria',dur:'40 min'},
+  {id:126,nombre:'Reco post endodoncia simple (tallado)',cat:'Operatoria',dur:'75 min'},
+  {id:127,nombre:'Reimplante (ambiente quirúrgico) en garantía',cat:'Implantes',dur:'60 min'},
+  {id:128,nombre:'Renovación de consulta',cat:'Consultas',dur:'60 min'},
+  {id:129,nombre:'Retiro de ortodoncia',cat:'Ortodoncia',dur:'45 min'},
+  {id:130,nombre:'Retiro de sutura',cat:'Cirugía',dur:'5 min'},
+  {id:131,nombre:'Retratamiento de conducto',cat:'Endodoncia',dur:'60-90 min'},
+  {id:132,nombre:'ROG en implante (misma cirugía)',cat:'Implantes',dur:'15 min'},
+  {id:133,nombre:'ROG: regeneración ósea guiada (cirugía)',cat:'Implantes',dur:'45 min'},
+  {id:134,nombre:'Selladores',cat:'Prevención',dur:'20 min'},
+  {id:135,nombre:'Service prótesis híbrida',cat:'Implantes',dur:'90-120 min'},
+  {id:136,nombre:'Teleodontología (primera consulta virtual)',cat:'Consultas',dur:'15 min'},
+  {id:137,nombre:'Toma de impresiones',cat:'Prótesis',dur:'15 min'},
+  {id:138,nombre:'Tratamiento de conducto uni',cat:'Endodoncia',dur:'60 min'},
+  {id:139,nombre:'Tratamiento de conducto bi',cat:'Endodoncia',dur:'60 min'},
+  {id:140,nombre:'Tratamiento de conducto multi',cat:'Endodoncia',dur:'30+ min'},
+  {id:141,nombre:'Tratamiento intermedio',cat:'Endodoncia',dur:'30 min'},
+  {id:142,nombre:'Traumatismo dentario maxilar abordaje',cat:'Cirugía',dur:'90 min'},
+  {id:143,nombre:'Service prótesis híbrida (corto)',cat:'Implantes',dur:'90 min'},
+];
+
+// Usuarios iniciales
+const USERS_INIT = [
+  {id:1,nombre:'Administrador',rol:'admin',pin:'1234',color:'#1A3557',iniciales:'AD'},
+];
+
+// ══════════════════════════════════════════════════════════════════════════════
+// ESTADO
+// ══════════════════════════════════════════════════════════════════════════════
+// Datos en memoria (se sincronizan con Firebase)
+let mats   = [];
+let hist   = [];
+let cfg    = {};
+let prests = [];
+let users  = [];
+
+let nextMatId   = mats.reduce((a,m)=>Math.max(a,m.id),0)+1;
+let nextPrestId = prests.reduce((a,p)=>Math.max(a,p.id),0)+1;
+let nextUserId  = users.reduce((a,u)=>Math.max(a,u.id),0)+1;
+let editMatId=null, editPrestId=null, editUserId=null, cfgPrestId=null;
+let currentUser = null;
+let pinBuffer = '';
+let selectedUserId = null;
+
+async function save(){
+  if(!window._db) return;
+  const db=window._db;
+  await Promise.all([
+    window._fbSetDoc(window._fbDoc(db,'datos','mats'),   {v:JSON.stringify(mats)}),
+    window._fbSetDoc(window._fbDoc(db,'datos','cfg'),    {v:JSON.stringify(cfg)}),
+    window._fbSetDoc(window._fbDoc(db,'datos','prests'), {v:JSON.stringify(prests)}),
+    window._fbSetDoc(window._fbDoc(db,'datos','users'),  {v:JSON.stringify(users)}),
+  ]);
+  // Historial: guardar solo el último evento (append)
+  if(hist.length>0){
+    const last=hist[hist.length-1];
+    await window._fbSetDoc(window._fbDoc(db,'datos','hist'), {v:JSON.stringify(hist)});
+  }
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// HELPERS
+// ══════════════════════════════════════════════════════════════════════════════
+function estadoClass(m){ return m.stock<=0?'danger':m.minimo>0&&m.stock<=m.minimo?'warn':'ok'; }
+function estadoLabel(m){ return m.stock<=0?'🔴 Agotado':m.minimo>0&&m.stock<=m.minimo?'🟡 Stock bajo':'🟢 Normal'; }
+function pct(m){ return !m.minimo?100:Math.min(100,Math.round(m.stock/(m.minimo*3)*100)); }
+function hoy(){ return new Date().toLocaleDateString('es-AR'); }
+function matNom(id){ const m=mats.find(x=>x.id===id); return m?m.nombre:'?'; }
+function insumosDe(pid){ return cfg[pid]||[]; }
+function tieneInsumos(pid){ return (cfg[pid]||[]).length>0; }
+function isAdmin(){ return currentUser&&currentUser.rol==='admin'; }
+
+function vencStatus(venc){
+  if(!venc)return null;
+  const hoyD=new Date(); hoyD.setDate(1); hoyD.setHours(0,0,0,0);
+  const [y,mo]=venc.split('-').map(Number);
+  const vD=new Date(y,mo-1,1);
+  const diff=Math.round((vD-hoyD)/(1000*60*60*24));
+  if(diff<0)return{clase:'venc-vencido',label:'⛔ Vencido'};
+  if(diff<=60)return{clase:'venc-pronto',label:`⚠️ ${formatVenc(venc)}`};
+  return{clase:'venc-ok',label:`✅ ${formatVenc(venc)}`};
+}
+function formatVenc(v){
+  if(!v)return'—';
+  const [y,mo]=v.split('-');
+  const m=['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
+  return`${m[parseInt(mo)-1]} ${y}`;
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// LOGIN
+// ══════════════════════════════════════════════════════════════════════════════
+function initLogin(){
+  const grid=document.getElementById('user-grid');
+  grid.innerHTML=users.map(u=>`
+    <button class="user-btn" onclick="seleccionarUsuario(${u.id})">
+      <div class="avatar" style="background:${u.color}">${u.iniciales||u.nombre.slice(0,2).toUpperCase()}</div>
+      <span>${u.nombre}</span>
+      <span style="font-size:10px;color:#888;font-weight:400">${u.rol==='admin'?'Admin':'Prof.'}</span>
+    </button>`).join('');
+  document.getElementById('pin-wrap').style.display='none';
+  document.getElementById('login-err').textContent='';
+  pinBuffer='';
+  selectedUserId=null;
+}
+
+function seleccionarUsuario(id){
+  if(!id){
+    document.getElementById('pin-wrap').style.display='none';
+    document.querySelectorAll('.user-btn').forEach(b=>b.classList.remove('selected'));
+    selectedUserId=null; pinBuffer=''; updatePinDots(); return;
+  }
+  selectedUserId=id;
+  document.querySelectorAll('.user-btn').forEach(b=>b.classList.remove('selected'));
+  event.currentTarget&&event.currentTarget.classList.add('selected');
+  document.getElementById('pin-wrap').style.display='block';
+  const u=users.find(x=>x.id===id);
+  document.getElementById('pin-label').textContent=`PIN de ${u.nombre}`;
+  document.getElementById('login-err').textContent='';
+  pinBuffer=''; updatePinDots();
+  buildNumpad();
+}
+
+function buildNumpad(){
+  const np=document.getElementById('numpad');
+  const btns=[1,2,3,4,5,6,7,8,9,'⌫',0,'✓'];
+  np.innerHTML=btns.map(b=>`<button class="numpad-btn${b==='⌫'?' del':''}" onclick="numpadPress('${b}')">${b}</button>`).join('');
+}
+
+function numpadPress(val){
+  const err=document.getElementById('login-err');
+  if(val==='⌫'){ pinBuffer=pinBuffer.slice(0,-1); updatePinDots(); err.textContent=''; return; }
+  if(val==='✓'){ intentarLogin(); return; }
+  if(pinBuffer.length>=4)return;
+  pinBuffer+=val; updatePinDots();
+  if(pinBuffer.length===4) setTimeout(intentarLogin,150);
+}
+
+function updatePinDots(){
+  document.querySelectorAll('.pin-dot').forEach((d,i)=>d.classList.toggle('filled',i<pinBuffer.length));
+}
+
+function intentarLogin(){
+  const u=users.find(x=>x.id===selectedUserId);
+  if(!u)return;
+  if(pinBuffer===u.pin){
+    currentUser=u;
+    document.getElementById('login-screen').classList.add('hidden');
+    document.getElementById('user-name-header').textContent=u.nombre;
+    document.getElementById('user-dot-header').textContent=u.iniciales||u.nombre.slice(0,2).toUpperCase();
+    document.getElementById('user-dot-header').style.background=u.color;
+    // Mostrar/ocultar tab admin
+    if(isAdmin()){
+      document.getElementById('tab-admin').classList.add('show');
+      document.querySelectorAll('.admin-only').forEach(el=>el.classList.add('show'));
+    } else {
+      document.getElementById('tab-admin').classList.remove('show');
+      document.querySelectorAll('.admin-only').forEach(el=>el.classList.remove('show'));
+    }
+    render();
+  } else {
+    document.getElementById('login-err').textContent='PIN incorrecto. Intentá de nuevo.';
+    pinBuffer=''; updatePinDots();
+  }
+}
+
+function cerrarSesion(){
+  if(!confirm('¿Cerrar sesión?'))return;
+  currentUser=null; pinBuffer='';
+  document.getElementById('login-screen').classList.remove('hidden');
+  initLogin();
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// TABS
+// ══════════════════════════════════════════════════════════════════════════════
+function showTab(id,el){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('page-'+id).classList.add('active');
+  el.classList.add('active');
+  if(id==='prestaciones') renderPrestaciones();
+  if(id==='historial-tab') renderHistFull();
+  if(id==='admin') renderAdmin();
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// RENDER INVENTARIO
+// ══════════════════════════════════════════════════════════════════════════════
+function render(){
+  document.getElementById('fecha-sub').textContent=
+    'Actualizado: '+new Date().toLocaleDateString('es-AR',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+  const ok=mats.filter(m=>estadoClass(m)==='ok').length;
+  const warn=mats.filter(m=>estadoClass(m)==='warn').length;
+  const danger=mats.filter(m=>estadoClass(m)==='danger').length;
+  const venc=mats.filter(m=>{const s=vencStatus(m.venc);return s&&(s.clase==='venc-vencido'||s.clase==='venc-pronto');}).length;
+
+  document.getElementById('stats').innerHTML=`
+    <div class="stat"><div class="num">${mats.length}</div><div class="lbl">📦 Materiales</div></div>
+    <div class="stat ok"><div class="num">${ok}</div><div class="lbl">✅ OK</div></div>
+    <div class="stat warn"><div class="num">${warn}</div><div class="lbl">⚠️ Stock bajo</div></div>
+    <div class="stat danger"><div class="num">${danger}</div><div class="lbl">🚨 Agotados</div></div>
+    <div class="stat ${venc>0?'danger':''}"><div class="num" style="${venc>0?'color:var(--rojo)':''}">${venc}</div><div class="lbl">📅 Venc./Por vencer</div></div>
+  `;
+
+  const criticos=mats.filter(m=>m.minimo>0&&m.stock<=m.minimo);
+  const vencAlert=mats.filter(m=>{const s=vencStatus(m.venc);return s&&(s.clase==='venc-vencido'||s.clase==='venc-pronto');});
+  const ab=document.getElementById('alert-bar');
+  const msgs=[];
+  if(criticos.length) msgs.push('🚨 <strong>Reponer:</strong> '+criticos.map(m=>m.nombre+(m.stock<=0?' (agotado)':`(quedan ${+m.stock.toFixed(2)})`)).join(' · '));
+  if(vencAlert.length) msgs.push('📅 <strong>Vencimiento:</strong> '+vencAlert.map(m=>`${m.nombre} (${formatVenc(m.venc)})`).join(' · '));
+  if(msgs.length){ab.style.display='block';ab.innerHTML=msgs.join('<br>');}else{ab.style.display='none';}
+
+  renderTabla();
+  renderHistMini();
+}
+
+function renderTabla(){
+  const q=(document.getElementById('buscar-mat')?.value||'').toLowerCase();
+  const lista=q?mats.filter(m=>m.nombre.toLowerCase().includes(q)||m.cat.toLowerCase().includes(q)):mats;
+  const tbody=document.getElementById('tabla');
+  if(!lista.length){tbody.innerHTML='<tr><td colspan="7" class="empty-row">Sin resultados.</td></tr>';return;}
+  tbody.innerHTML=lista.map(m=>{
+    const sc=estadoClass(m); const vs=vencStatus(m.venc);
+    const acciones=isAdmin()
+      ?`<button class="sm" onclick="abrirMovimiento(${m.id},'in')">📥</button>
+        <button class="sm" onclick="abrirMovimiento(${m.id},'out')">📤</button>
+        <button class="sm" onclick="abrirEditarMat(${m.id})">✏️</button>
+        <button class="sm" onclick="eliminarMat(${m.id})">🗑️</button>`
+      :`<button class="sm" onclick="abrirMovimiento(${m.id},'in')">📥</button>
+        <button class="sm" onclick="abrirMovimiento(${m.id},'out')">📤</button>`;
+    return`<tr>
+      <td><div style="font-weight:600">${m.nombre}</div><div style="font-size:11px;color:#888">${m.cat}${m.obs?` · ${m.obs}`:''}</div></td>
+      <td style="text-align:center;font-weight:700;font-size:15px">${+m.stock.toFixed(2)}</td>
+      <td style="text-align:center;color:#777">${m.minimo||'—'}</td>
+      <td><span class="bar-wrap"><span class="bar ${sc}" style="width:${pct(m)}%"></span></span></td>
+      <td><span class="badge ${sc}">${estadoLabel(m)}</span></td>
+      <td><span class="${vs?vs.clase:'venc-nd'}">${vs?vs.label:m.venc?formatVenc(m.venc):'—'}</span></td>
+      <td style="display:flex;gap:4px;flex-wrap:wrap">${acciones}</td>
+    </tr>`;
+  }).join('');
+}
+
+function renderHistMini(){
+  renderHistItems(document.getElementById('hist-mini'),[...hist].reverse().slice(0,15));
+}
+function renderHistFull(){
+  const fu=document.getElementById('hist-filtro-user').value;
+  const items=fu?hist.filter(h=>h.userId==fu):hist;
+  renderHistItems(document.getElementById('hist-full'),[...items].reverse());
+}
+function renderHistItems(el,items){
+  if(!items.length){el.innerHTML='<div class="empty-row">Sin movimientos aún.</div>';return;}
+  el.innerHTML=items.map(h=>{
+    const uColor=getUserColor(h.userId);
+    const uNom=getUserNom(h.userId);
+    if(h.tipo==='proc'){
+      const det=(h.insumos||[]).map(i=>`${i.nombre}×${i.cant}`).join(', ');
+      return`<div class="hist-item">
+        <div>
+          <strong>${h.nombre}</strong>${h.nota?' — '+h.nota:''}
+          ${det?`<div style="color:var(--text-s);margin-top:2px;font-size:11px">${det}</div>`:''}
+        </div>
+        <div style="display:flex;align-items:center;gap:6px;flex-shrink:0;flex-direction:column;align-items:flex-end">
+          <div style="display:flex;align-items:center;gap:5px">
+            <span style="width:18px;height:18px;border-radius:50%;background:${uColor};display:inline-flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:white">${uNom}</span>
+            <span style="color:#999;font-size:11px">${h.fecha}</span>
+          </div>
+          <span class="tag proc">🦷${h.veces>1?' ×'+h.veces:''}</span>
+        </div>
+      </div>`;
+    }
+    return`<div class="hist-item">
+      <span><strong>${h.nombre}</strong>${h.nota?' — '+h.nota:''}</span>
+      <div style="display:flex;align-items:center;gap:6px;flex-shrink:0">
+        <span style="width:18px;height:18px;border-radius:50%;background:${uColor};display:inline-flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:white">${uNom}</span>
+        <span style="color:#999;font-size:11px">${h.fecha}</span>
+        <span class="tag ${h.tipo}">${h.tipo==='in'?'+':'−'}${h.cant}</span>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function getUserColor(uid){ const u=users.find(x=>x.id==uid); return u?u.color:'#888'; }
+function getUserNom(uid){ const u=users.find(x=>x.id==uid); return u?u.iniciales||u.nombre.slice(0,2).toUpperCase():'?'; }
+
+// ══════════════════════════════════════════════════════════════════════════════
+// RENDER PRESTACIONES
+// ══════════════════════════════════════════════════════════════════════════════
+function renderPrestaciones(){
+  const q=(document.getElementById('buscar-prest')?.value||'').toLowerCase();
+  const soloCfg=document.getElementById('solo-cfg')?.checked;
+  let lista=q?prests.filter(p=>p.nombre.toLowerCase().includes(q)||p.cat.toLowerCase().includes(q)):prests;
+  if(soloCfg) lista=lista.filter(p=>tieneInsumos(p.id));
+  document.getElementById('prest-count').textContent=`${lista.length} prestaciones`;
+  if(!lista.length){document.getElementById('prest-lista').innerHTML='<div class="empty-row">Sin resultados.</div>';return;}
+  // Agrupar por categoría
+  const cats={};
+  lista.forEach(p=>{if(!cats[p.cat])cats[p.cat]=[];cats[p.cat].push(p);});
+  document.getElementById('prest-lista').innerHTML=Object.entries(cats).map(([cat,ps])=>`
+    <div class="cat-title">${cat}</div>
+    ${ps.map(p=>{
+      const ins=insumosDe(p.id);
+      const adminBtns=isAdmin()
+        ?`<button class="sm" onclick="abrirCfg(${p.id})" title="Configurar insumos">${ins.length?'✏️':'⚙️'}</button>
+           <button class="sm" onclick="abrirEditarPrest(${p.id})">📝</button>
+           <button class="sm" onclick="eliminarPrest(${p.id})">🗑️</button>`
+        :`<button class="sm" onclick="abrirCfg(${p.id})" title="Ver insumos">${ins.length?'✏️':'⚙️'}</button>`;
+      return`<div class="prest-row">
+        <div>
+          <div class="prest-name">${p.nombre}</div>
+          <div class="prest-dur">${p.dur||''}${ins.length?` · <span class="badge cfg">${ins.length} insumo${ins.length>1?'s':''}</span>`:' · <span style="font-size:11px;color:#bbb">sin insumos</span>'}</div>
+        </div>
+        <div class="prest-actions">
+          <button class="sm accent" onclick="abrirRegistrarUno(${p.id})">▶ Registrar</button>
+          ${adminBtns}
+        </div>
+      </div>`;
+    }).join('')}`).join('');
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// RENDER ADMIN
+// ══════════════════════════════════════════════════════════════════════════════
+function renderAdmin(){
+  // Usuarios
+  const ul=document.getElementById('admin-usuarios');
+  ul.innerHTML=users.map(u=>`
+    <div class="user-admin-row">
+      <div style="display:flex;align-items:center;gap:10px">
+        <div style="width:32px;height:32px;border-radius:50%;background:${u.color};display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:white">${u.iniciales||u.nombre.slice(0,2).toUpperCase()}</div>
+        <div>
+          <div style="font-weight:600;font-size:13px">${u.nombre}</div>
+          <div style="font-size:11px;color:var(--text-s)">${u.rol==='admin'?'Administrador':'Profesional'} · PIN: ${'•'.repeat(u.pin.length)}</div>
+        </div>
+      </div>
+      <div style="display:flex;gap:5px">
+        <button class="sm" onclick="abrirEditarUser(${u.id})">✏️</button>
+        ${u.id===currentUser?.id?'':`<button class="sm" onclick="eliminarUser(${u.id})">🗑️</button>`}
+      </div>
+    </div>`).join('');
+
+  // Insumos
+  const il=document.getElementById('admin-insumos');
+  il.innerHTML=mats.map(m=>{
+    const vs=vencStatus(m.venc);
+    return`<div class="admin-item">
+      <div style="min-width:0">
+        <div style="font-size:13px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${m.nombre}</div>
+        <div style="font-size:11px;color:var(--text-s)">Stock: <strong>${+m.stock.toFixed(2)}</strong> · ${m.cat} · <span class="${vs?vs.clase:'venc-nd'}">${vs?vs.label:m.venc?formatVenc(m.venc):'sin venc.'}</span></div>
+      </div>
+      <div style="display:flex;gap:4px;flex-shrink:0">
+        <button class="sm" onclick="abrirEditarMat(${m.id})">✏️</button>
+        <button class="sm" onclick="eliminarMat(${m.id})">🗑️</button>
+      </div>
+    </div>`;
+  }).join('');
+
+  // Ajuste select
+  const sel=document.getElementById('adj-mat');
+  if(sel) sel.innerHTML=mats.map(m=>`<option value="${m.id}">${m.nombre} (stock: ${+m.stock.toFixed(2)})</option>`).join('');
+
+  // Historial filtro usuarios
+  const fu=document.getElementById('hist-filtro-user');
+  if(fu) fu.innerHTML='<option value="">Todos los usuarios</option>'+users.map(u=>`<option value="${u.id}">${u.nombre}</option>`).join('');
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// MODAL: MATERIAL
+// ══════════════════════════════════════════════════════════════════════════════
+function abrirAgregarMat(){
+  editMatId=null;
+  document.getElementById('mat-titulo').textContent='Nuevo material';
+  ['m-nombre','m-obs'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('m-stock').value=0;
+  document.getElementById('m-min').value=0;
+  document.getElementById('m-venc').value='';
+  document.getElementById('m-cat').value='General';
+  document.getElementById('modal-mat').classList.add('open');
+  setTimeout(()=>document.getElementById('m-nombre').focus(),50);
+}
+function abrirEditarMat(id){
+  editMatId=id;
+  const m=mats.find(x=>x.id===id);
+  document.getElementById('mat-titulo').textContent='Editar material';
+  document.getElementById('m-nombre').value=m.nombre;
+  document.getElementById('m-cat').value=m.cat||'General';
+  document.getElementById('m-stock').value=m.stock;
+  document.getElementById('m-min').value=m.minimo;
+  document.getElementById('m-venc').value=m.venc||'';
+  document.getElementById('m-obs').value=m.obs||'';
+  document.getElementById('modal-mat').classList.add('open');
+}
+function guardarMat(){
+  const nombre=document.getElementById('m-nombre').value.trim();
+  if(!nombre){alert('Ingresá un nombre.');return;}
+  const data={
+    nombre, cat:document.getElementById('m-cat').value,
+    stock:parseFloat(document.getElementById('m-stock').value)||0,
+    minimo:parseFloat(document.getElementById('m-min').value)||0,
+    venc:document.getElementById('m-venc').value||null,
+    obs:document.getElementById('m-obs').value.trim(),
+  };
+  if(editMatId){ Object.assign(mats.find(x=>x.id===editMatId),data); }
+  else { mats.push({id:nextMatId++,...data,consumido:0}); }
+  save();render();if(document.getElementById('page-admin').classList.contains('active'))renderAdmin();
+  cerrar('modal-mat');
+}
+function eliminarMat(id){
+  if(!confirm('¿Eliminar este material?'))return;
+  mats=mats.filter(x=>x.id!==id);
+  save();render();if(document.getElementById('page-admin').classList.contains('active'))renderAdmin();
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// MODAL: MOVIMIENTO MANUAL
+// ══════════════════════════════════════════════════════════════════════════════
+function abrirMovimiento(id,tipo){
+  document.getElementById('mov-mat').innerHTML=mats.map(m=>`<option value="${m.id}"${m.id===id?' selected':''}>${m.nombre}</option>`).join('');
+  document.getElementById('mov-tipo').value=tipo||'in';
+  document.getElementById('mov-cant').value=1;
+  document.getElementById('mov-nota').value='';
+  document.getElementById('modal-mov').classList.add('open');
+  setTimeout(()=>document.getElementById('mov-cant').focus(),50);
+}
+function confirmarMov(){
+  const matId=parseInt(document.getElementById('mov-mat').value);
+  const tipo=document.getElementById('mov-tipo').value;
+  const cant=parseFloat(document.getElementById('mov-cant').value)||0;
+  const nota=document.getElementById('mov-nota').value.trim();
+  if(cant<=0){alert('La cantidad debe ser mayor a 0.');return;}
+  const m=mats.find(x=>x.id===matId);
+  if(tipo==='out'&&cant>m.stock){alert(`Stock insuficiente. Disponible: ${m.stock}`);return;}
+  if(tipo==='out'){m.stock=+(m.stock-cant).toFixed(4);m.consumido=(m.consumido||0)+cant;}
+  else{m.stock=+(m.stock+cant).toFixed(4);}
+  hist.push({fecha:hoy(),nombre:m.nombre,tipo,cant,nota,userId:currentUser?.id});
+  save();render();cerrar('modal-mov');
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// MODAL: CONFIGURAR INSUMOS
+// ══════════════════════════════════════════════════════════════════════════════
+function abrirCfg(pid){
+  cfgPrestId=pid;
+  const p=prests.find(x=>x.id===pid);
+  document.getElementById('cfg-titulo').textContent=`Configurar insumos`;
+  document.getElementById('cfg-desc').textContent=p.nombre;
+  document.getElementById('cfg-lines').innerHTML='';
+  const ins=insumosDe(pid);
+  if(ins.length) ins.forEach(i=>agregarLineaCfg(i.matId,i.cant));
+  else agregarLineaCfg();
+  document.getElementById('modal-cfg').classList.add('open');
+}
+function agregarLineaCfg(matId=null,cant=1){
+  const c=document.getElementById('cfg-lines');
+  const d=document.createElement('div');
+  d.className='insumo-line';
+  const opts=mats.map(m=>`<option value="${m.id}"${m.id===matId?' selected':''}>${m.nombre}</option>`).join('');
+  d.innerHTML=`<select>${opts}</select><input type="number" min="0.001" step="0.001" value="${cant}"><button class="rm-btn" onclick="this.parentElement.remove()">×</button>`;
+  c.appendChild(d);
+}
+function guardarCfg(){
+  const lines=[...document.querySelectorAll('#cfg-lines .insumo-line')];
+  cfg[cfgPrestId]=lines.map(l=>({
+    matId:parseInt(l.querySelector('select').value),
+    cant:parseFloat(l.querySelector('input').value)||1
+  })).filter(i=>i.matId);
+  save();
+  if(document.getElementById('page-prestaciones').classList.contains('active')) renderPrestaciones();
+  cerrar('modal-cfg');
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// MODAL: REGISTRAR PRESTACIÓN
+// ══════════════════════════════════════════════════════════════════════════════
+function abrirRegistrar(){
+  const conIns=prests.filter(p=>tieneInsumos(p.id));
+  if(!conIns.length){
+    alert('Ninguna prestación tiene insumos configurados todavía.\n\nAndate a "Prestaciones", buscá la práctica y tocá ⚙️ para asignar los insumos que consume.');
+    return;
+  }
+  poblarRegSel(conIns);
+  document.getElementById('reg-cant').value=1;
+  document.getElementById('reg-nota').value='';
+  document.getElementById('reg-preview').innerHTML='';
+  document.getElementById('modal-reg').classList.add('open');
+}
+function abrirRegistrarUno(pid){
+  poblarRegSel(prests.filter(p=>tieneInsumos(p.id)));
+  document.getElementById('reg-sel').value=pid;
+  document.getElementById('reg-cant').value=1;
+  document.getElementById('reg-nota').value='';
+  previewReg();
+  document.getElementById('modal-reg').classList.add('open');
+}
+function poblarRegSel(lista){
+  const cats={};
+  lista.forEach(p=>{if(!cats[p.cat])cats[p.cat]=[];cats[p.cat].push(p);});
+  document.getElementById('reg-sel').innerHTML=
+    '<option value="">-- Seleccioná --</option>'+
+    Object.entries(cats).map(([cat,ps])=>
+      `<optgroup label="${cat}">${ps.map(p=>`<option value="${p.id}">${p.nombre}</option>`).join('')}</optgroup>`
+    ).join('');
+}
+function previewReg(){
+  const pid=parseInt(document.getElementById('reg-sel').value);
+  const veces=parseInt(document.getElementById('reg-cant').value)||1;
+  if(!pid){document.getElementById('reg-preview').innerHTML='';return;}
+  const ins=insumosDe(pid);
+  if(!ins.length){document.getElementById('reg-preview').innerHTML='<div style="color:var(--text-s);font-size:12px;padding:8px">Sin insumos configurados.</div>';return;}
+  const rows=ins.map(i=>{
+    const m=mats.find(x=>x.id===i.matId);
+    const total=+(i.cant*veces).toFixed(4);
+    const insuf=m&&total>m.stock;
+    return`<div class="confirm-row"><span>${m?m.nombre:'?'}</span><span class="${insuf?'warn-txt':''}">−${total}${insuf?` ⚠️(stock:${m?m.stock:0})`:''}</span></div>`;
+  }).join('');
+  document.getElementById('reg-preview').innerHTML=`<div class="confirm-box">
+    <div style="font-size:11px;font-weight:700;color:var(--text-s);margin-bottom:6px">SE DESCUENTA${veces>1?' (×'+veces+')':''}:</div>${rows}</div>`;
+}
+function confirmarReg(){
+  const pid=parseInt(document.getElementById('reg-sel').value);
+  const veces=parseInt(document.getElementById('reg-cant').value)||1;
+  const nota=document.getElementById('reg-nota').value.trim();
+  if(!pid){alert('Seleccioná una prestación.');return;}
+  const p=prests.find(x=>x.id===pid);
+  const ins=insumosDe(pid);
+  if(!ins.length){alert('Sin insumos configurados.');return;}
+  const sinStock=ins.filter(i=>{const m=mats.find(x=>x.id===i.matId);return m&&(i.cant*veces)>m.stock;});
+  if(sinStock.length){if(!confirm(`⚠️ Stock insuficiente para: ${sinStock.map(i=>matNom(i.matId)).join(', ')}\n\n¿Registrar igual?`))return;}
+  const log=[];
+  ins.forEach(i=>{
+    const m=mats.find(x=>x.id===i.matId); if(!m)return;
+    const total=+(i.cant*veces).toFixed(4);
+    m.stock=+Math.max(0,m.stock-total).toFixed(4);
+    m.consumido=+((m.consumido||0)+total).toFixed(4);
+    log.push({nombre:m.nombre,cant:total});
+  });
+  hist.push({fecha:hoy(),tipo:'proc',nombre:`🦷 ${p.nombre}`,nota,veces,insumos:log,userId:currentUser?.id});
+  save();render();cerrar('modal-reg');
+  setTimeout(()=>alert('✅ Registrado.\n\nDescontado:\n'+log.map(i=>`• ${i.nombre}: −${i.cant}`).join('\n')),80);
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// MODAL: PRESTACIÓN
+// ══════════════════════════════════════════════════════════════════════════════
+function abrirNuevaPrest(){
+  editPrestId=null;
+  document.getElementById('prest-titulo').textContent='Nueva prestación';
+  document.getElementById('p-nombre').value='';
+  document.getElementById('p-dur').value='';
+  document.getElementById('p-cat').value='Consultas';
+  document.getElementById('modal-prest').classList.add('open');
+  setTimeout(()=>document.getElementById('p-nombre').focus(),50);
+}
+function abrirEditarPrest(id){
+  editPrestId=id;
+  const p=prests.find(x=>x.id===id);
+  document.getElementById('prest-titulo').textContent='Editar prestación';
+  document.getElementById('p-nombre').value=p.nombre;
+  document.getElementById('p-dur').value=p.dur||'';
+  document.getElementById('p-cat').value=p.cat;
+  document.getElementById('modal-prest').classList.add('open');
+}
+function guardarPrest(){
+  const nombre=document.getElementById('p-nombre').value.trim();
+  if(!nombre){alert('Ingresá un nombre.');return;}
+  const data={nombre,cat:document.getElementById('p-cat').value,dur:document.getElementById('p-dur').value.trim()};
+  if(editPrestId){ Object.assign(prests.find(x=>x.id===editPrestId),data); }
+  else { prests.push({id:nextPrestId++,...data}); }
+  save();renderPrestaciones();cerrar('modal-prest');
+}
+function eliminarPrest(id){
+  if(!confirm('¿Eliminar esta prestación?'))return;
+  prests=prests.filter(x=>x.id!==id);
+  delete cfg[id];
+  save();renderPrestaciones();
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// MODAL: USUARIOS
+// ══════════════════════════════════════════════════════════════════════════════
+function abrirNuevoUsuario(){
+  editUserId=null;
+  document.getElementById('user-titulo').textContent='Nuevo usuario';
+  ['u-nombre','u-pin'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('u-rol').value='prof';
+  document.getElementById('u-color').value='#2563A8';
+  document.getElementById('modal-user').classList.add('open');
+  setTimeout(()=>document.getElementById('u-nombre').focus(),50);
+}
+function abrirEditarUser(id){
+  editUserId=id;
+  const u=users.find(x=>x.id===id);
+  document.getElementById('user-titulo').textContent='Editar usuario';
+  document.getElementById('u-nombre').value=u.nombre;
+  document.getElementById('u-rol').value=u.rol;
+  document.getElementById('u-pin').value=u.pin;
+  document.getElementById('u-color').value=u.color;
+  document.getElementById('modal-user').classList.add('open');
+}
+function guardarUsuario(){
+  const nombre=document.getElementById('u-nombre').value.trim();
+  const pin=document.getElementById('u-pin').value.trim();
+  if(!nombre){alert('Ingresá un nombre.');return;}
+  if(!/^\d{4}$/.test(pin)){alert('El PIN debe tener exactamente 4 dígitos numéricos.');return;}
+  const color=document.getElementById('u-color').value;
+  const iniciales=nombre.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
+  const data={nombre,rol:document.getElementById('u-rol').value,pin,color,iniciales};
+  if(editUserId){ Object.assign(users.find(x=>x.id===editUserId),data); }
+  else { users.push({id:nextUserId++,...data}); }
+  save();renderAdmin();cerrar('modal-user');
+}
+function eliminarUser(id){
+  if(id===currentUser?.id){alert('No podés eliminar tu propio usuario.');return;}
+  if(!confirm('¿Eliminar este usuario?'))return;
+  users=users.filter(x=>x.id!==id);
+  save();renderAdmin();
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// AJUSTE RÁPIDO
+// ══════════════════════════════════════════════════════════════════════════════
+function previewAdj(){
+  const m=mats.find(x=>x.id===parseInt(document.getElementById('adj-mat')?.value));
+  const nuevo=parseFloat(document.getElementById('adj-cant')?.value);
+  const prev=document.getElementById('adj-preview');
+  if(!m||isNaN(nuevo)){if(prev)prev.textContent='';return;}
+  const diff=+(nuevo-m.stock).toFixed(2);
+  prev.innerHTML=`Actual: <strong>${+m.stock.toFixed(2)}</strong> → nuevo: <strong>${nuevo}</strong> <span style="color:${diff>=0?'var(--verde)':'var(--rojo)'}">(${diff>=0?'+':''}${diff})</span>`;
+}
+function confirmarAdj(){
+  const matId=parseInt(document.getElementById('adj-mat').value);
+  const nuevo=parseFloat(document.getElementById('adj-cant').value);
+  if(isNaN(nuevo)||nuevo<0){alert('Valor inválido.');return;}
+  const m=mats.find(x=>x.id===matId);
+  const viejo=m.stock; m.stock=nuevo;
+  hist.push({fecha:hoy(),nombre:m.nombre,tipo:nuevo>=viejo?'in':'out',cant:+Math.abs(nuevo-viejo).toFixed(2),nota:'Ajuste de inventario',userId:currentUser?.id});
+  save();render();renderAdmin();
+  document.getElementById('adj-cant').value='';
+  document.getElementById('adj-preview').textContent='';
+  alert(`✅ Stock de "${m.nombre}" ajustado a ${nuevo}.`);
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// RESPALDO
+// ══════════════════════════════════════════════════════════════════════════════
+function exportarRespaldo(){
+  const data={version:4,fecha:new Date().toISOString(),mats,hist,cfg,prests,users};
+  const a=document.createElement('a');
+  a.href='data:application/json;charset=utf-8,'+encodeURIComponent(JSON.stringify(data,null,2));
+  a.download='respaldo_stock_'+new Date().toISOString().slice(0,10)+'.json';
+  a.click();
+}
+function importarRespaldo(input){
+  const file=input.files[0]; if(!file)return;
+  const reader=new FileReader();
+  reader.onload=e=>{
+    try{
+      const data=JSON.parse(e.target.result);
+      if(!data.mats)throw new Error('inválido');
+      if(!confirm(`¿Importar respaldo del ${data.fecha?data.fecha.slice(0,10):'?'}?\nEsto reemplazará todos los datos actuales.`))return;
+      mats=data.mats||[];hist=data.hist||[];cfg=data.cfg||{};prests=data.prests||[];users=data.users||[];
+      nextMatId=mats.reduce((a,m)=>Math.max(a,m.id),0)+1;
+      nextPrestId=prests.reduce((a,p)=>Math.max(a,p.id),0)+1;
+      nextUserId=users.reduce((a,u)=>Math.max(a,u.id),0)+1;
+      save();render();renderAdmin();
+      alert('✅ Respaldo importado.');
+    }catch(e){alert('Error al leer el archivo.');}
+  };
+  reader.readAsText(file); input.value='';
+}
+function exportCSV(){
+  let csv='INVENTARIO\nMaterial,Categoría,Stock,Mínimo,Estado,Vencimiento,Obs\n';
+  mats.forEach(m=>csv+=`"${m.nombre}","${m.cat}",${m.stock},${m.minimo},"${estadoLabel(m).replace(/[🔴🟡🟢]/g,'').trim()}","${m.venc?formatVenc(m.venc):'—'}","${m.obs||''}"\n`);
+  csv+='\nHISTORIAL\nFecha,Usuario,Tipo,Detalle\n';
+  [...hist].reverse().forEach(h=>{
+    const u=getUserNom(h.userId);
+    if(h.tipo==='proc') csv+=`"${h.fecha}","${u}","Prestación","${h.nombre}${h.veces>1?' ×'+h.veces:''}${h.nota?' — '+h.nota:''}"\n`;
+    else csv+=`"${h.fecha}","${u}","${h.tipo==='in'?'Entrada':'Salida'}","${h.nombre} ${h.tipo==='in'?'+':'-'}${h.cant}${h.nota?' — '+h.nota:''}"\n`;
+  });
+  const a=document.createElement('a');
+  a.href='data:text/csv;charset=utf-8,\uFEFF'+encodeURIComponent(csv);
+  a.download='stock_'+new Date().toISOString().slice(0,10)+'.csv';
+  a.click();
+}
+function resetearDatos(){
+  if(!confirm('⚠️ Borrará TODOS los datos.\n¿Estás seguro?'))return;
+  if(!confirm('Última confirmación.'))return;
+  mats=MATS_INIT;hist=[];cfg={};prests=PRESTS_INIT;users=USERS_INIT;
+  nextMatId=mats.reduce((a,m)=>Math.max(a,m.id),0)+1;
+  nextPrestId=prests.reduce((a,p)=>Math.max(a,p.id),0)+1;
+  nextUserId=users.reduce((a,u)=>Math.max(a,u.id),0)+1;
+  save();render();renderAdmin();alert('Datos reseteados a los valores iniciales.');
+}
+
+function cerrar(id){document.getElementById(id).classList.remove('open');}
+document.querySelectorAll('.overlay').forEach(el=>el.addEventListener('click',e=>{if(e.target===el)el.classList.remove('open');}));
+
+// ══════════════════════════════════════════════════════════════════════════════
+// INIT
+// ══════════════════════════════════════════════════════════════════════════════
+// ══ BOOTSTRAP FIREBASE ══════════════════════════════════════════════════════
+function mostrarCargando(msg){
+  document.getElementById('login-screen').innerHTML=`
+    <div style="text-align:center;color:white">
+      <div style="font-size:40px;margin-bottom:16px">🦷</div>
+      <div style="font-size:16px;font-weight:700">Consultorio Odontológico</div>
+      <div style="font-size:13px;opacity:.7;margin-top:8px">${msg}</div>
+      <div style="margin-top:20px;width:40px;height:40px;border:3px solid rgba(255,255,255,.3);border-top-color:white;border-radius:50%;animation:spin .8s linear infinite;margin:20px auto"></div>
+    </div>
+    <style>@keyframes spin{to{transform:rotate(360deg)}}</style>`;
+}
+
+async function cargarDatos(db){
+  mostrarCargando('Conectando con la base de datos...');
+  try {
+    const [dMats,dCfg,dPrests,dUsers,dHist] = await Promise.all([
+      window._fbGetDoc(window._fbDoc(db,'datos','mats')),
+      window._fbGetDoc(window._fbDoc(db,'datos','cfg')),
+      window._fbGetDoc(window._fbDoc(db,'datos','prests')),
+      window._fbGetDoc(window._fbDoc(db,'datos','users')),
+      window._fbGetDoc(window._fbDoc(db,'datos','hist')),
+    ]);
+    mats   = dMats.exists()   ? JSON.parse(dMats.data().v)   : MATS_INIT;
+    cfg    = dCfg.exists()    ? JSON.parse(dCfg.data().v)    : {};
+    prests = dPrests.exists() ? JSON.parse(dPrests.data().v) : PRESTS_INIT;
+    users  = dUsers.exists()  ? JSON.parse(dUsers.data().v)  : USERS_INIT;
+    hist   = dHist.exists()   ? JSON.parse(dHist.data().v)   : [];
+
+    nextMatId   = mats.reduce((a,m)=>Math.max(a,m.id),0)+1;
+    nextPrestId = prests.reduce((a,p)=>Math.max(a,p.id),0)+1;
+    nextUserId  = users.reduce((a,u)=>Math.max(a,u.id),0)+1;
+
+    // Si es primera vez, guardar datos iniciales
+    if(!dMats.exists()) await save();
+
+    // Escuchar cambios en tiempo real
+    window._fbOnSnapshot(window._fbDoc(db,'datos','mats'),   snap=>{if(snap.exists()&&currentUser){mats=JSON.parse(snap.data().v);nextMatId=mats.reduce((a,m)=>Math.max(a,m.id),0)+1;render();if(document.getElementById('page-admin').classList.contains('active'))renderAdmin();}});
+    window._fbOnSnapshot(window._fbDoc(db,'datos','hist'),   snap=>{if(snap.exists()&&currentUser){hist=JSON.parse(snap.data().v);renderHistMini();if(document.getElementById('page-historial-tab').classList.contains('active'))renderHistFull();}});
+    window._fbOnSnapshot(window._fbDoc(db,'datos','prests'), snap=>{if(snap.exists()&&currentUser){prests=JSON.parse(snap.data().v);nextPrestId=prests.reduce((a,p)=>Math.max(a,p.id),0)+1;if(document.getElementById('page-prestaciones').classList.contains('active'))renderPrestaciones();}});
+    window._fbOnSnapshot(window._fbDoc(db,'datos','users'),  snap=>{if(snap.exists()&&currentUser){users=JSON.parse(snap.data().v);nextUserId=users.reduce((a,u)=>Math.max(a,u.id),0)+1;}});
+    window._fbOnSnapshot(window._fbDoc(db,'datos','cfg'),    snap=>{if(snap.exists()&&currentUser){cfg=JSON.parse(snap.data().v);}});
+
+    // Restaurar login screen y mostrar usuarios
+    document.getElementById('login-screen').innerHTML=`
+      <div style="text-align:center;color:white;margin-bottom:4px">
+        <div style="font-size:32px">🦷</div>
+        <div style="font-size:18px;font-weight:700;margin-top:8px">Consultorio Odontológico</div>
+        <div style="font-size:13px;opacity:.7;margin-top:4px">Control de Stock</div>
+      </div>
+      <div class="login-box">
+        <h2>Iniciar sesión</h2>
+        <p>Seleccioná tu usuario e ingresá tu PIN</p>
+        <div class="user-grid" id="user-grid"></div>
+        <div class="pin-wrap" id="pin-wrap" style="display:none">
+          <div style="font-size:12px;color:var(--text-s);text-align:center" id="pin-label">Ingresá tu PIN</div>
+          <div class="pin-dots" id="pin-dots">
+            <div class="pin-dot"></div><div class="pin-dot"></div>
+            <div class="pin-dot"></div><div class="pin-dot"></div>
+          </div>
+          <div class="numpad" id="numpad"></div>
+          <div class="login-err" id="login-err"></div>
+        </div>
+        <button onclick="seleccionarUsuario(null)" style="width:100%;margin-top:4px;font-size:12px;color:var(--text-s)">← Cambiar usuario</button>
+      </div>`;
+    document.getElementById('login-screen').classList.remove('hidden');
+    initLogin();
+
+  } catch(e) {
+    document.getElementById('login-screen').innerHTML=`
+      <div style="text-align:center;color:white;max-width:360px;padding:24px">
+        <div style="font-size:40px">⚠️</div>
+        <div style="font-size:16px;font-weight:700;margin-top:12px">Error de conexión</div>
+        <div style="font-size:13px;opacity:.8;margin-top:8px;line-height:1.6">No se pudo conectar con Firebase. Verificá que el firebaseConfig esté bien cargado y que Firestore esté habilitado.<br><br>Error: ${e.message}</div>
+        <button onclick="location.reload()" style="margin-top:16px;padding:10px 20px;border-radius:8px;background:white;color:var(--azul);font-weight:700;border:none;cursor:pointer">🔄 Reintentar</button>
+      </div>`;
+  }
+}
+
+// Esperar a que Firebase esté listo
+if(window._fbReady){
+  cargarDatos(window._db);
+} else {
+  mostrarCargando('Iniciando...');
+  window.addEventListener('firebase-ready', ()=>cargarDatos(window._db), {once:true});
+}
+</script>
+</body>
+</html>

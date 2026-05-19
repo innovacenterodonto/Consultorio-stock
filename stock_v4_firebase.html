@@ -1017,22 +1017,27 @@ function renderPrestaciones(){
   document.getElementById('prest-count').textContent=`${lista.length} prestaciones`;
   if(!lista.length){document.getElementById('prest-lista').innerHTML='<div class="empty-row">Sin resultados.</div>';return;}
   const cats={};lista.forEach(p=>{if(!cats[p.cat])cats[p.cat]=[];cats[p.cat].push(p);});
-  document.getElementById('prest-lista').innerHTML=Object.entries(cats).map(([cat,ps])=>`
-    <div class="cat-title">${cat}</div>
-    ${ps.map(p=>{
+  document.getElementById('prest-lista').innerHTML=Object.entries(cats).map(([cat,ps])=>{
+    const rows=ps.map(p=>{
       const ins=insumosDe(p.id);
-      const adminBtns=isAdmin()?`<button class="sm" onclick="abrirCfg(${p.id})">${ins.length?'✏️':'⚙️'}</button><button class="sm" onclick="abrirEditarPrest(${p.id})">📝</button><button class="sm" onclick="eliminarPrest(${p.id})">🗑️</button>`:'';
-      return`<div class="prest-row">
-        <div style="min-width:0">
-          <div class="prest-name">${p.nombre}</div>
-          <div class="prest-dur">${p.dur||''}${ins.length?` · <span class="badge cfg">${ins.length} insumo${ins.length>1?'s':''}</span>':' · <span style="font-size:11px;color:var(--text-xs)">sin insumos configurados</span>'}</div>
-        </div>
-        <div style="display:flex;gap:5px;align-items:center;flex-shrink:0">
-          <button class="sm accent" onclick="abrirRegistrarUno(${p.id})">▶ Registrar</button>
-          ${adminBtns}
-        </div>
-      </div>`;
-    }).join('')}`).join('');
+      const adminBtns=isAdmin()?
+        '<button class="sm" onclick="abrirCfg('+p.id+')">'+(ins.length?'✏️':'⚙️')+'</button>'+
+        '<button class="sm" onclick="abrirEditarPrest('+p.id+')">📝</button>'+
+        '<button class="sm" onclick="eliminarPrest('+p.id+')">🗑️</button>':'';
+      const durStr=ins.length?
+        ' · <span class="badge cfg">'+ins.length+' insumo'+(ins.length>1?'s':'')+'</span>':
+        ' · <span style="font-size:11px;color:var(--text-xs)">sin insumos</span>';
+      return '<div class="prest-row">'+
+        '<div style="min-width:0">'+
+        '<div class="prest-name">'+p.nombre+'</div>'+
+        '<div class="prest-dur">'+(p.dur||'')+durStr+'</div>'+
+        '</div>'+
+        '<div style="display:flex;gap:5px;align-items:center;flex-shrink:0">'+
+        '<button class="sm accent" onclick="abrirRegistrarUno('+p.id+')">▶ Registrar</button>'+
+        adminBtns+'</div></div>';
+    }).join('');
+    return '<div class="cat-title">'+cat+'</div>'+rows;
+  }).join('');
 }
 
 // ══ ADMIN ══

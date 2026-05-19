@@ -622,7 +622,7 @@ tbody td{padding:9px 14px;font-size:13px;vertical-align:middle}
   window._db = _fbDB;
   window._doc = (db, col, id) => db.collection(col).doc(id);
   window._getDoc = (ref) => ref.get();
-  window._setDoc = (ref, data) => ref.set(data);
+  window._setDoc = (ref, data) => ref.set(data, {merge:false});
   window._onSnapshot = (ref, cb) => ref.onSnapshot(snap => cb({exists:()=>snap.exists, data:()=>snap.data()}));
   window._fbReady = true;
   window.dispatchEvent(new Event('firebase-ready'));
@@ -1275,22 +1275,22 @@ async function cargarDatos(db){
   mostrarCargando('Conectando...');
   try{
     const[dM,dC,dP,dU,dH]=await Promise.all([window._getDoc(window._doc(db,'datos','mats')),window._getDoc(window._doc(db,'datos','cfg')),window._getDoc(window._doc(db,'datos','prests')),window._getDoc(window._doc(db,'datos','users')),window._getDoc(window._doc(db,'datos','hist'))]);
-    mats=dM.exists()?JSON.parse(dM.data().v):MATS_INIT;
-    cfg=dC.exists()?JSON.parse(dC.data().v):{};
-    prests=dP.exists()?JSON.parse(dP.data().v):PRESTS_INIT;
-    users=dU.exists()?JSON.parse(dU.data().v):USERS_INIT;
-    hist=dH.exists()?JSON.parse(dH.data().v):[];
+    mats=dM.exists?JSON.parse(dM.data().v):MATS_INIT;
+    cfg=dC.exists?JSON.parse(dC.data().v):{};
+    prests=dP.exists?JSON.parse(dP.data().v):PRESTS_INIT;
+    users=dU.exists?JSON.parse(dU.data().v):USERS_INIT;
+    hist=dH.exists?JSON.parse(dH.data().v):[];
     nextMatId=mats.reduce((a,m)=>Math.max(a,m.id),0)+1;
     nextPrestId=prests.reduce((a,p)=>Math.max(a,p.id),0)+1;
     nextUserId=users.reduce((a,u)=>Math.max(a,u.id),0)+1;
     if(!dM.exists())await save();
 
     // Listeners tiempo real
-    window._onSnapshot(window._doc(db,'datos','mats'),s=>{if(s.exists()&&currentUser){mats=JSON.parse(s.data().v);nextMatId=mats.reduce((a,m)=>Math.max(a,m.id),0)+1;render();if(document.getElementById('page-admin').classList.contains('active'))renderAdmin();if(document.getElementById('page-compras').classList.contains('active'))renderCompras();}});
-    window._onSnapshot(window._doc(db,'datos','hist'),s=>{if(s.exists()&&currentUser){hist=JSON.parse(s.data().v);renderHistMini();if(document.getElementById('page-historial-tab').classList.contains('active'))renderHistFull();if(document.getElementById('page-analytics').classList.contains('active'))renderAnalytics();}});
-    window._onSnapshot(window._doc(db,'datos','prests'),s=>{if(s.exists()&&currentUser){prests=JSON.parse(s.data().v);nextPrestId=prests.reduce((a,p)=>Math.max(a,p.id),0)+1;if(document.getElementById('page-prestaciones').classList.contains('active'))renderPrestaciones();}});
-    window._onSnapshot(window._doc(db,'datos','users'),s=>{if(s.exists()&&currentUser)users=JSON.parse(s.data().v);});
-    window._onSnapshot(window._doc(db,'datos','cfg'),s=>{if(s.exists()&&currentUser)cfg=JSON.parse(s.data().v);});
+    window._onSnapshot(window._doc(db,'datos','mats'),s=>{if(s.exists&&currentUser){mats=JSON.parse(s.data().v);nextMatId=mats.reduce((a,m)=>Math.max(a,m.id),0)+1;render();if(document.getElementById('page-admin').classList.contains('active'))renderAdmin();if(document.getElementById('page-compras').classList.contains('active'))renderCompras();}});
+    window._onSnapshot(window._doc(db,'datos','hist'),s=>{if(s.exists&&currentUser){hist=JSON.parse(s.data().v);renderHistMini();if(document.getElementById('page-historial-tab').classList.contains('active'))renderHistFull();if(document.getElementById('page-analytics').classList.contains('active'))renderAnalytics();}});
+    window._onSnapshot(window._doc(db,'datos','prests'),s=>{if(s.exists&&currentUser){prests=JSON.parse(s.data().v);nextPrestId=prests.reduce((a,p)=>Math.max(a,p.id),0)+1;if(document.getElementById('page-prestaciones').classList.contains('active'))renderPrestaciones();}});
+    window._onSnapshot(window._doc(db,'datos','users'),s=>{if(s.exists&&currentUser)users=JSON.parse(s.data().v);});
+    window._onSnapshot(window._doc(db,'datos','cfg'),s=>{if(s.exists&&currentUser)cfg=JSON.parse(s.data().v);});
 
     // Restaurar login — sin reemplazar el DOM
     ocultarCargando();

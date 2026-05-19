@@ -696,8 +696,12 @@ function initLogin(){
       <span>${u.nombre}</span>
       <span style="font-size:10px;color:#94a3b8;font-weight:400">${u.rol==='admin'?'Admin':'Prof.'}</span>
     </button>`).join('');
-  document.getElementById('pin-wrap').style.display='none';
-  document.getElementById('login-err').textContent='';
+  const pw=document.getElementById('pin-wrap');
+  if(pw)pw.style.display='none';
+  const le=document.getElementById('login-err');
+  if(le)le.textContent='';
+  const dd=document.getElementById('pin-dots');
+  if(dd)dd.innerHTML='<div class="pin-dot"></div><div class="pin-dot"></div><div class="pin-dot"></div><div class="pin-dot"></div>';
   pinBuffer='';selectedUserId=null;
 }
 
@@ -715,6 +719,8 @@ function seleccionarUsuario(id){
 
 function buildNumpad(){
   const np=document.getElementById('numpad');
+  if(!np)return;
+  np.innerHTML='';
   [1,2,3,4,5,6,7,8,9,'⌫',0,'✓'].forEach(b=>{
     const btn=document.createElement('button');
     btn.className='numpad-btn'+(b==='⌫'?' del':'');

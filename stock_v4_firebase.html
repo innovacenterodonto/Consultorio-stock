@@ -606,25 +606,28 @@ tbody td{padding:9px 14px;font-size:13px;vertical-align:middle}
   </div>
 </div>
 
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getFirestore, doc, getDoc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-
-const firebaseConfig = {
-  apiKey: "AIzaSyDe6TWoKPOjVc5-boSERJjPfl_JYWiHcgk",
-  authDomain: "consultorios-stock.firebaseapp.com",
-  projectId: "consultorios-stock",
-  storageBucket: "consultorios-stock.firebasestorage.app",
-  messagingSenderId: "712455622368",
-  appId: "1:712455622368:web:3379df240df0fa25470a85"
-};
-
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
-window._db=db; window._doc=doc; window._getDoc=getDoc; window._setDoc=setDoc; window._onSnapshot=onSnapshot;
-window._fbReady=true;
-window.dispatchEvent(new Event('firebase-ready'));
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+<script>
+  const firebaseConfig = {
+    apiKey: "AIzaSyDe6TWoKPOjVc5-boSERJjPfl_JYWiHcgk",
+    authDomain: "consultorios-stock.firebaseapp.com",
+    projectId: "consultorios-stock",
+    storageBucket: "consultorios-stock.firebasestorage.app",
+    messagingSenderId: "712455622368",
+    appId: "1:712455622368:web:3379df240df0fa25470a85"
+  };
+  firebase.initializeApp(firebaseConfig);
+  const _fbDB = firebase.firestore();
+  window._db = _fbDB;
+  window._doc = (db, col, id) => db.collection(col).doc(id);
+  window._getDoc = (ref) => ref.get();
+  window._setDoc = (ref, data) => ref.set(data);
+  window._onSnapshot = (ref, cb) => ref.onSnapshot(snap => cb({exists:()=>snap.exists, data:()=>snap.data()}));
+  window._fbReady = true;
+  window.dispatchEvent(new Event('firebase-ready'));
 </script>
+
 
 <script>
 const K_MATS='odo_v4_mats',K_HIST='odo_v4_hist',K_CFG='odo_v4_cfg',K_PRESTS='odo_v4_prests',K_USERS='odo_v4_users';

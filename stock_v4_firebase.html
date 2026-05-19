@@ -236,7 +236,7 @@ tbody td{padding:9px 14px;font-size:13px;vertical-align:middle}
       <div class="numpad" id="numpad"></div>
       <div class="login-err" id="login-err"></div>
     </div>
-    <button onclick="seleccionarUsuario(null)" style="width:100%;margin-top:8px;font-size:12px;color:var(--text-s);justify-content:center">← Cambiar usuario</button>
+    <button id="btn-cambiar-user" style="width:100%;margin-top:8px;font-size:12px;color:var(--text-s);justify-content:center">← Cambiar usuario</button>
   </div>
 </div>
 
@@ -706,6 +706,8 @@ function initLogin(){
   const dd=document.getElementById('pin-dots');
   if(dd)dd.innerHTML='<div class="pin-dot"></div><div class="pin-dot"></div><div class="pin-dot"></div><div class="pin-dot"></div>';
   pinBuffer='';selectedUserId=null;
+  const bcu=document.getElementById('btn-cambiar-user');
+  if(bcu) bcu.onclick=()=>seleccionarUsuario(null);
 }
 
 function seleccionarUsuario(id){
@@ -1293,7 +1295,7 @@ async function cargarDatos(db){
           <div class="numpad" id="numpad"></div>
           <div class="login-err" id="login-err"></div>
         </div>
-        <button onclick="seleccionarUsuario(null)" style="width:100%;margin-top:8px;font-size:12px;color:var(--text-s);justify-content:center">← Cambiar usuario</button>
+        <button id="btn-cambiar-user" style="width:100%;margin-top:8px;font-size:12px;color:var(--text-s);justify-content:center">← Cambiar usuario</button>
       </div>`;
     document.getElementById('login-screen').classList.remove('hidden');
     initLogin();
